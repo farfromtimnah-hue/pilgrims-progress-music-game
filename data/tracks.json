@@ -2,15 +2,21 @@
   "tracks": [
     {
       "id": "instrumentalist",
-      "name": "Instrumentalist",
-      "description": "Key signature first, then note-in-key membership, then scale-degree numbers, then chord function.",
+      "name": { "en": "Instrumentalist", "pt": "Instrumentista" },
+      "description": {
+        "en": "Key signature first, then note-in-key membership, then scale-degree numbers, then chord function.",
+        "pt": "Primeiro a armadura de clave, depois as notas que pertencem à tonalidade, depois os graus da escala, depois a função dos acordes."
+      },
       "learningSequence": ["key_signature", "note_in_key", "scale_degree", "chord_function"],
       "enabled": true
     },
     {
       "id": "singer",
-      "name": "Singer",
-      "description": "Singer track — learning logic to be defined in a later session.",
+      "name": { "en": "Singer", "pt": "Cantor" },
+      "description": {
+        "en": "Singer track — learning logic to be defined in a later session.",
+        "pt": "Trilha do cantor — a lógica de aprendizagem será definida em uma sessão futura."
+      },
       "learningSequence": [],
       "enabled": false
     }

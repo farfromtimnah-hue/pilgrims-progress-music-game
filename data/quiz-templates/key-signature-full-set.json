@@ -1,7 +1,10 @@
 {
   "id": "key-signature-full-set",
   "type": "key_signature_full_set",
-  "title": "Select all accidentals in the key",
+  "title": {
+    "en": "Select all accidentals in the key",
+    "pt": "Selecione todos os acidentes da tonalidade"
+  },
   "trackIds": ["instrumentalist"],
   "topic": "key_signature",
   "keyIds": ["C-major", "G-major", "F-major"],

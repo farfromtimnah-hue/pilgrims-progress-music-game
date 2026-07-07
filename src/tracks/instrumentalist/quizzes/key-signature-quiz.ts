@@ -15,8 +15,10 @@
  *
  * Both the grader and the recovery flow are pure and UI-free.
  */
-import type { Key, KeySignatureAccidentals, SpelledNote } from "../../../engine/types/schema.js";
+import type { LocalizedText } from "../../../engine/i18n/localized-text.js";
+import { noteNamePt } from "../../../engine/i18n/note-names.js";
 import { isEnharmonic, noteName, sameSpelling } from "../../../engine/theory/pitch.js";
+import type { Key, KeySignatureAccidentals, SpelledNote } from "../../../engine/types/schema.js";
 
 // ---------------------------------------------------------------------------
 // Full-set grading
@@ -71,7 +73,7 @@ export type RecoveryAnswer =
 
 export type RecoveryEffect =
   | { type: "advance"; to: RecoveryStep }
-  | { type: "retry_step"; hint: string }
+  | { type: "retry_step"; hint: LocalizedText }
   | { type: "recovery_complete" };
 
 export interface RecoveryTransition {
@@ -84,7 +86,11 @@ export interface RecoveryOptions {
   includeOrderStep?: boolean;
 }
 
-const SIDE_WORD: Record<"#" | "b" | "none", string> = { "#": "sharps", b: "flats", none: "no accidentals" };
+const SIDE_WORD: Record<"#" | "b" | "none", LocalizedText> = {
+  "#": { en: "sharps", pt: "sustenidos" },
+  b: { en: "flats", pt: "bemóis" },
+  none: { en: "no accidentals", pt: "nenhum acidente" },
+};
 
 /**
  * Advance the recovery flow with the student's answer to the current step.
@@ -99,7 +105,7 @@ export function recoveryReducer(
 ): RecoveryTransition {
   if (answer.step !== state.step) return { state, effects: [] };
 
-  const retry = (hint: string): RecoveryTransition => ({
+  const retry = (hint: LocalizedText): RecoveryTransition => ({
     state: { ...state, attemptsOnStep: state.attemptsOnStep + 1 },
     effects: [{ type: "retry_step", hint }],
   });
@@ -111,9 +117,10 @@ export function recoveryReducer(
   switch (answer.step) {
     case "circle_side": {
       if (answer.side !== key.circleSide) {
-        return retry(
-          `Think of the circle of fifths: does ${key.displayName} sit on the sharp side or the flat side?`,
-        );
+        return retry({
+          en: `Think of the circle of fifths: does ${key.displayName.en} sit on the sharp side or the flat side?`,
+          pt: `Pense no círculo das quintas: ${key.displayName.pt} fica do lado dos sustenidos ou do lado dos bemóis?`,
+        });
       }
       // A key with no accidentals (C major / A minor) has nothing left to recover.
       return key.accidentalCount === 0 ? advance("complete") : advance("accidental_count");
@@ -121,7 +128,10 @@ export function recoveryReducer(
 
     case "accidental_count": {
       if (answer.count !== key.accidentalCount) {
-        return retry(`${key.displayName} has ${SIDE_WORD[signature.accidentalType]} — count around the circle again.`);
+        return retry({
+          en: `${key.displayName.en} has ${SIDE_WORD[signature.accidentalType].en} — count around the circle again.`,
+          pt: `${key.displayName.pt} tem ${SIDE_WORD[signature.accidentalType].pt} — conte de novo pelo círculo.`,
+        });
       }
       return advance("select_set");
     }
@@ -129,12 +139,17 @@ export function recoveryReducer(
     case "select_set": {
       const grade = gradeFullSet(answer.notes, signature);
       if (!grade.correct) {
-        const spellingHint = grade.wrongSpellings[0]
-          ? ` Careful: this key spells that pitch ${noteName(grade.wrongSpellings[0].expected)}, not ${noteName(grade.wrongSpellings[0].selected)}.`
-          : "";
-        return retry(
-          `You know the side and the count (${key.accidentalCount}) — now pick exactly those ${SIDE_WORD[signature.accidentalType]}.${spellingHint}`,
-        );
+        const ws = grade.wrongSpellings[0];
+        const spellingHint: LocalizedText = ws
+          ? {
+              en: ` Careful: this key spells that pitch ${noteName(ws.expected)}, not ${noteName(ws.selected)}.`,
+              pt: ` Cuidado: nesta tonalidade essa altura se escreve ${noteNamePt(ws.expected)}, e não ${noteNamePt(ws.selected)}.`,
+            }
+          : { en: "", pt: "" };
+        return retry({
+          en: `You know the side and the count (${key.accidentalCount}) — now pick exactly those ${SIDE_WORD[signature.accidentalType].en}.${spellingHint.en}`,
+          pt: `Você já sabe o lado e a quantidade (${key.accidentalCount}) — agora escolha exatamente esses ${SIDE_WORD[signature.accidentalType].pt}.${spellingHint.pt}`,
+        });
       }
       return options.includeOrderStep ? advance("order_set") : advance("complete");
     }
@@ -146,8 +161,14 @@ export function recoveryReducer(
       if (!inOrder) {
         return retry(
           signature.accidentalType === "#"
-            ? "Sharps are added in fifths: F C G D A E B."
-            : "Flats are added in fourths: B E A D G C F.",
+            ? {
+                en: "Sharps are added in fifths: F C G D A E B.",
+                pt: "Os sustenidos entram em quintas: Fá Dó Sol Ré Lá Mi Si.",
+              }
+            : {
+                en: "Flats are added in fourths: B E A D G C F.",
+                pt: "Os bemóis entram em quartas: Si Mi Lá Ré Sol Dó Fá.",
+              },
         );
       }
       return advance("complete");

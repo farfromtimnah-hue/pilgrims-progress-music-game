@@ -14,6 +14,7 @@ import type {
   ScaleDegreeMap,
   SpelledNote,
 } from "../types/schema.js";
+import { noteNamePt } from "../i18n/note-names.js";
 import { noteName, pitchClassOf } from "./pitch.js";
 
 const LETTERS: LetterName[] = ["C", "D", "E", "F", "G", "A", "B"];
@@ -88,7 +89,10 @@ export function buildKey(tonic: SpelledNote, mode: KeyMode): BuiltKey {
     id,
     tonic,
     mode,
-    displayName: `${noteName(tonic)} ${mode}`,
+    displayName: {
+      en: `${noteName(tonic)} ${mode}`,
+      pt: `${noteNamePt(tonic)} ${mode === "major" ? "maior" : "menor"}`,
+    },
     circleSide: accidentalType === "#" ? "sharp" : accidentalType === "b" ? "flat" : "none",
     accidentalCount: signatureNotes.length,
   };

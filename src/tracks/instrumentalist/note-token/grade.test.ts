@@ -4,13 +4,24 @@ import { buildKey } from "../../../engine/theory/keys.js";
 import { spelled } from "../../../engine/theory/pitch.js";
 import { gradeNoteToken, judgeAnswer } from "./grade.js";
 
-const BEGINNER: DifficultyTier = { id: "beginner", name: "Beginner", closeAnswerPolicy: "neutral", description: "" };
-const INTERMEDIATE: DifficultyTier = { id: "intermediate", name: "Intermediate", closeAnswerPolicy: "teach", description: "" };
+const NO_TEXT = { en: "", pt: "" };
+const BEGINNER: DifficultyTier = {
+  id: "beginner",
+  name: { en: "Beginner", pt: "Iniciante" },
+  closeAnswerPolicy: "neutral",
+  description: NO_TEXT,
+};
+const INTERMEDIATE: DifficultyTier = {
+  id: "intermediate",
+  name: { en: "Intermediate", pt: "Intermediário" },
+  closeAnswerPolicy: "teach",
+  description: NO_TEXT,
+};
 const ADVANCED: DifficultyTier = {
   id: "advanced",
-  name: "Advanced",
+  name: { en: "Advanced", pt: "Avançado" },
   closeAnswerPolicy: "penalize_if_notation_chapter",
-  description: "",
+  description: NO_TEXT,
 };
 
 const ebMajor = buildKey(spelled("E", "b"), "major").scale;

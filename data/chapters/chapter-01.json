@@ -1,6 +1,9 @@
 {
   "id": "ch01",
-  "title": "Chapter 1 (placeholder — narrative content comes in a later session)",
+  "title": {
+    "en": "Chapter 1 (placeholder — narrative content comes in a later session)",
+    "pt": "Capítulo 1 (provisório — o conteúdo narrativo virá em uma sessão futura)"
+  },
   "order": 1,
   "testsNotationPrecision": false,
   "keyIds": ["C", "G", "F"],

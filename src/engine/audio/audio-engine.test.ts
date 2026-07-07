@@ -34,7 +34,7 @@ const C_MAJOR: Key = {
   id: "C-major",
   tonic: spelled("C"),
   mode: "major",
-  displayName: "C major",
+  displayName: { en: "C major", pt: "Dó maior" },
   circleSide: "none",
   accidentalCount: 0,
 };
@@ -87,7 +87,7 @@ describe("AudioEngine — never plays a note in isolation", () => {
     const { backend, engine } = makeEngine();
     engine.setContext({ id: "cue1", kind: "tonic_drone", keyId: "C-major", contextGain: 0.25 });
     engine.setKey(
-      { ...C_MAJOR, id: "G-major", tonic: spelled("G"), displayName: "G major", circleSide: "sharp", accidentalCount: 1 },
+      { ...C_MAJOR, id: "G-major", tonic: spelled("G"), displayName: { en: "G major", pt: "Sol maior" }, circleSide: "sharp", accidentalCount: 1 },
       { keyId: "G-major", degrees: ["G", "A", "B", "C", "D", "E"].map((l) => spelled(l as never)).concat([spelled("F", "#")]) },
     );
     expect(engine.hasActiveContext).toBe(false);

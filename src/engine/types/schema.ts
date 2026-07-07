@@ -11,7 +11,12 @@
  * spelling is *correct* depends on the active key. B# is right in C# major,
  * Fb is right in Gb major — the engine must never flag them as errors merely
  * for being unusual.
+ *
+ * Localization: every user-facing string field is a LocalizedText carrying
+ * both English and Brazilian Portuguese; the active language is resolved at
+ * read time (see engine/i18n). Ids and enum values stay plain strings.
  */
+import type { LocalizedText } from "../i18n/localized-text.js";
 
 // ---------------------------------------------------------------------------
 // Pitch fundamentals
@@ -47,8 +52,8 @@ export type LearningTopic =
 
 export interface Track {
   id: TrackId;
-  name: string;
-  description: string;
+  name: LocalizedText;
+  description: LocalizedText;
   learningSequence: LearningTopic[];
   enabled: boolean;
 }
@@ -63,9 +68,9 @@ export type DifficultyTierId = "beginner" | "intermediate" | "advanced";
 
 export interface DifficultyTier {
   id: DifficultyTierId;
-  name: string;
+  name: LocalizedText;
   closeAnswerPolicy: CloseAnswerPolicy;
-  description: string;
+  description: LocalizedText;
 }
 
 // ---------------------------------------------------------------------------
@@ -74,7 +79,7 @@ export interface DifficultyTier {
 
 export interface Chapter {
   id: string;
-  title: string;
+  title: LocalizedText;
   order: number;
   /** When true, Advanced tier counts Close answers as real mistakes. */
   testsNotationPrecision: boolean;
@@ -95,8 +100,8 @@ export interface Level {
 
 export interface SideQuest {
   id: string;
-  title: string;
-  description: string;
+  title: LocalizedText;
+  description: LocalizedText;
   /** Which track(s) can take this quest; both share one world. */
   trackIds: TrackId[];
   quizTemplateIds: string[];
@@ -111,7 +116,7 @@ export interface Key {
   id: string; // e.g. "Eb-major", "c#-minor"
   tonic: SpelledNote;
   mode: KeyMode;
-  displayName: string; // e.g. "E♭ major"
+  displayName: LocalizedText; // e.g. { en: "E♭ major", pt: "Mi♭ maior" }
   /** Which side of the circle of fifths: sharps, flats, or neither (C major / A minor). */
   circleSide: "sharp" | "flat" | "none";
   accidentalCount: number; // 0–7
@@ -140,7 +145,7 @@ export interface EnharmonicRule {
   /** A same-pitch spelling students commonly substitute (e.g. D# for Eb). */
   equivalentSpellings: SpelledNote[];
   /** Teaching prompt shown when a Close answer uses one of the equivalents. */
-  teachingPrompt: string;
+  teachingPrompt: LocalizedText;
 }
 
 /** Maps scale degrees (1–7) to spelled notes for one key. */
@@ -179,7 +184,7 @@ export type QuizType =
 export interface QuizTemplate {
   id: string;
   type: QuizType;
-  title: string;
+  title: LocalizedText;
   trackIds: TrackId[];
   /** Topic this quiz teaches, for sequencing against a track's learningSequence. */
   topic: LearningTopic;
@@ -209,7 +214,7 @@ export interface ScaffoldStep {
  */
 export interface ScaffoldSequence {
   id: string;
-  title: string;
+  title: LocalizedText;
   topic: LearningTopic;
   /** Ordered instructional steps (mini-lessons / guided questions). */
   stepIds: string[];
@@ -246,8 +251,8 @@ export type RewardKind = "badge" | "item" | "cosmetic" | "story_beat" | "currenc
 export interface Reward {
   id: string;
   kind: RewardKind;
-  name: string;
-  description: string;
+  name: LocalizedText;
+  description: LocalizedText;
   amount?: number;
 }
 
@@ -257,7 +262,7 @@ export interface Reward {
  */
 export interface HarmonicUnlock {
   id: string;
-  name: string;
+  name: LocalizedText;
   /** What gets unlocked, referenced by id (key, audio cue, chord voicing…). */
   unlocks: { keyIds?: string[]; audioCueIds?: string[]; chordFunctionIds?: string[] };
   requiredChapterId: string;

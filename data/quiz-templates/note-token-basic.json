@@ -1,7 +1,10 @@
 {
   "id": "note-token-basic",
   "type": "note_token_membership",
-  "title": "Pick the notes that belong to this key",
+  "title": {
+    "en": "Pick the notes that belong to this key",
+    "pt": "Escolha as notas que pertencem a esta tonalidade"
+  },
   "trackIds": ["instrumentalist"],
   "topic": "note_in_key",
   "keyIds": ["C-major", "G-major", "F-major"],

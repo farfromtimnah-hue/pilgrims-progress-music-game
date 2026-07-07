@@ -149,3 +149,54 @@ Tone.js gives polyphonic synths with proper envelopes, sample-accurate schedulin
 
 **Read first next session**
 - `src/engine/i18n/localized-text.ts` — the header comment states the read-time-resolution rule everything else follows.
+
+---
+
+## 2026-07-07 — Bilingual retrofit, Piece 2: every user-facing string is now LocalizedText
+
+**What was built**
+- `src/engine/i18n/note-names.ts`: localized note naming for display text. English keeps letter names (E♭, B♯); Portuguese uses fixed-do solfège (Mi♭, Si♯), the standard in Brazilian music education. Display-only — ids, the schema, and all pitch math stay on letter names.
+- `src/engine/types/schema.ts`: every user-facing string field is now `LocalizedText` — `Track.name/description`, `DifficultyTier.name/description`, `Chapter.title`, `SideQuest.title/description`, `Key.displayName`, `EnharmonicRule.teachingPrompt`, `QuizTemplate.title`, `ScaffoldSequence.title`, `Reward.name/description`, `HarmonicUnlock.name`. Ids and enum values stay plain strings.
+- `src/engine/theory/keys.ts`: generated `displayName` is now bilingual (e.g. `{ en: "E♭ major", pt: "Mi♭ maior" }`).
+- `src/tracks/instrumentalist/note-token/grade.ts`: both feedback messages (wrong-note prompt, Close-answer teaching prompt) build `{ en, pt }` at grading time; `display()` resolves later.
+- `src/tracks/instrumentalist/quizzes/key-signature-quiz.ts`: all recovery hints (circle side, count, select-set incl. the enharmonic wrong-spelling hint, ordering mnemonics) are `LocalizedText`; the ordering mnemonics use letter names in EN and solfège in PT.
+- All five data JSON files retrofitted to `{ "en": …, "pt": … }` for names/titles/descriptions.
+- Strike machine untouched — it emits typed effects only, no user-facing strings. Audio engine and pitch math untouched, per scope.
+
+**Decisions made that weren't explicit**
+- **PT note names use fixed-do solfège** (Dó Ré Mi Fá Sol Lá Si) rather than letter names, since that is how Brazilian children are taught note names. Letter names still appear everywhere internal (ids like `"Eb-major"`, schema, tests). ⚠️ This is a pedagogy decision Nicole must confirm — see checklist below.
+- "Close" as a grading-state label is rendered "Quase" in tier descriptions — chosen over "Próxima" as more natural for kids ("quase!" = "almost!"). Needs review.
+- "Drone" translated as "bordão" (the sustained-tone sense, as in viola caipira drone strings). Needs review — "nota pedal" is the alternative.
+- Developer-facing `throw new Error` messages stay English-only; they never reach players.
+- Feedback messages are built in both languages at grading time (cheap string interpolation), and the caller resolves with `display()` — exactly the Directory pattern: no language decision is baked into stored/emitted data.
+
+**⚠️ PT strings needing native-speaker review before ship (checklist for Nicole)**
+None of the Portuguese below has been reviewed by a native speaker. For a children's education product every one needs sign-off:
+
+*Global / pedagogical decisions first:*
+- [ ] **Note names: solfège (Dó, Ré, Mi…) vs letter names (C, D, E…) in PT?** Everything below assumes solfège. If your students read cifra letter names, `src/engine/i18n/note-names.ts` is the one file to change.
+- [ ] "tonalidade" for *key* — correct term, but confirm it's what you say with students (vs "tom").
+- [ ] "armadura de clave" for *key signature*.
+- [ ] "acidentes" for *accidentals*; "sustenidos"/"bemóis" for sharps/flats.
+- [ ] "bordão" for *drone* (alternative: "nota pedal") — `grade.ts`.
+- [ ] "Quase" as the child-facing word for the Close grading state — `difficulty-tiers.json`.
+
+*Per-file strings:*
+- [ ] `data/tracks.json` — "Instrumentista"; "Cantor" (does it need "Cantor(a)"/"Cantora"?); both track descriptions.
+- [ ] `data/difficulty-tiers.json` — "Iniciante" / "Intermediário" / "Avançado" + all three descriptions.
+- [ ] `data/chapters/chapter-01.json` — placeholder chapter title.
+- [ ] `data/quiz-templates/key-signature-full-set.json` — "Selecione todos os acidentes da tonalidade".
+- [ ] `data/quiz-templates/note-token-basic.json` — "Escolha as notas que pertencem a esta tonalidade".
+- [ ] `grade.ts` wrong-note prompt — "… não está nesta tonalidade. Escute de novo com o bordão."
+- [ ] `grade.ts` Close teaching prompt — "… soa certo, mas nesta tonalidade essa altura se escreve …. Confira a armadura de clave." (Is "altura" (pitch) too technical for kids? "essa nota" may read better.)
+- [ ] `key-signature-quiz.ts` circle-side hint — "Pense no círculo das quintas: … fica do lado dos sustenidos ou do lado dos bemóis?"
+- [ ] `key-signature-quiz.ts` count hint — "… tem sustenidos — conte de novo pelo círculo."
+- [ ] `key-signature-quiz.ts` select-set hint — "Você já sabe o lado e a quantidade (…) — agora escolha exatamente esses sustenidos." + enharmonic hint "Cuidado: nesta tonalidade essa altura se escreve …, e não …."
+- [ ] `key-signature-quiz.ts` ordering mnemonics — "Os sustenidos entram em quintas: Fá Dó Sol Ré Lá Mi Si." / "Os bemóis entram em quartas: Si Mi Lá Ré Sol Dó Fá."
+- [ ] `keys.ts` key display names — "maior"/"menor" with solfège tonic (e.g. "Mi♭ maior").
+
+**Open questions for Nicole**
+- The solfège-vs-letters question above is the big one — it decides how notes appear in every PT hint.
+
+**Read first next session**
+- `src/engine/i18n/note-names.ts`, then the checklist above.

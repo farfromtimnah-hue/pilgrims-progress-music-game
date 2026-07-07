@@ -2,21 +2,30 @@
   "tiers": [
     {
       "id": "beginner",
-      "name": "Beginner",
+      "name": { "en": "Beginner", "pt": "Iniciante" },
       "closeAnswerPolicy": "neutral",
-      "description": "Close (wrong-spelling) answers do no damage; gentle prompts only."
+      "description": {
+        "en": "Close (wrong-spelling) answers do no damage; gentle prompts only.",
+        "pt": "Respostas Quase (grafia errada) não causam dano; apenas dicas gentis."
+      }
     },
     {
       "id": "intermediate",
-      "name": "Intermediate",
+      "name": { "en": "Intermediate", "pt": "Intermediário" },
       "closeAnswerPolicy": "teach",
-      "description": "Close answers trigger a corrective teaching prompt."
+      "description": {
+        "en": "Close answers trigger a corrective teaching prompt.",
+        "pt": "Respostas Quase acionam uma dica corretiva de ensino."
+      }
     },
     {
       "id": "advanced",
-      "name": "Advanced",
+      "name": { "en": "Advanced", "pt": "Avançado" },
       "closeAnswerPolicy": "penalize_if_notation_chapter",
-      "description": "Close answers count as real mistakes when the chapter tests notation precision."
+      "description": {
+        "en": "Close answers count as real mistakes when the chapter tests notation precision.",
+        "pt": "Respostas Quase contam como erros de verdade quando o capítulo testa a precisão da notação."
+      }
     }
   ]
 }

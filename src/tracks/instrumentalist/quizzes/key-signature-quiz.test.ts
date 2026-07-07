@@ -121,8 +121,8 @@ describe("recovery flow — the exact four-step order", () => {
     const effect = t.effects[0]!;
     expect(effect.type).toBe("retry_step");
     if (effect.type === "retry_step") {
-      expect(effect.hint).toContain("F♯");
-      expect(effect.hint).toContain("G♭");
+      expect(effect.hint.en).toContain("F♯");
+      expect(effect.hint.en).toContain("G♭");
     }
   });
 

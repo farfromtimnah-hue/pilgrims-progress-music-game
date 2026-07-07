@@ -12,8 +12,10 @@
  * Beginner = neutral, Intermediate = corrective teaching prompt,
  * Advanced = real mistake when the chapter tests notation precision.
  */
-import type { DifficultyTier, NoteTokenResult, SpelledNote } from "../../../engine/types/schema.js";
+import type { LocalizedText } from "../../../engine/i18n/localized-text.js";
+import { noteNamePt } from "../../../engine/i18n/note-names.js";
 import { noteName, pitchClassOf, sameSpelling } from "../../../engine/theory/pitch.js";
+import type { DifficultyTier, NoteTokenResult, SpelledNote } from "../../../engine/types/schema.js";
 
 export interface GradedNote {
   result: NoteTokenResult;
@@ -36,8 +38,8 @@ export function gradeNoteToken(answer: SpelledNote, scale: SpelledNote[]): Grade
 export type Feedback =
   | { kind: "none" }
   | { kind: "affirm" }
-  | { kind: "teaching_prompt"; message: string }
-  | { kind: "mistake_prompt"; message: string };
+  | { kind: "teaching_prompt"; message: LocalizedText }
+  | { kind: "mistake_prompt"; message: LocalizedText };
 
 export interface AnswerJudgment {
   graded: GradedNote;
@@ -66,14 +68,25 @@ export function judgeAnswer(
       return {
         graded,
         countsAsMistake: true,
-        feedback: { kind: "mistake_prompt", message: `${noteName(answer)} isn't in this key. Listen again against the drone.` },
+        feedback: {
+          kind: "mistake_prompt",
+          message: {
+            en: `${noteName(answer)} isn't in this key. Listen again against the drone.`,
+            pt: `${noteNamePt(answer)} não está nesta tonalidade. Escute de novo com o bordão.`,
+          },
+        },
       };
 
     case "close": {
       const expected = graded.expectedSpelling!;
-      const message =
-        `${noteName(answer)} sounds right, but this key spells that pitch ${noteName(expected)}. ` +
-        `Check the key signature.`;
+      const message: LocalizedText = {
+        en:
+          `${noteName(answer)} sounds right, but this key spells that pitch ${noteName(expected)}. ` +
+          `Check the key signature.`,
+        pt:
+          `${noteNamePt(answer)} soa certo, mas nesta tonalidade essa altura se escreve ${noteNamePt(expected)}. ` +
+          `Confira a armadura de clave.`,
+      };
 
       switch (tier.closeAnswerPolicy) {
         case "neutral":
