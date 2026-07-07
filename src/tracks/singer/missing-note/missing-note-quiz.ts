@@ -25,7 +25,7 @@ import {
 import { getKey } from "../../../engine/theory/keys.js";
 import { midiOf, noteName, pitchClassOf, sameSpelling } from "../../../engine/theory/pitch.js";
 import type { LetterName, NoteToken, SpelledNote } from "../../../engine/types/schema.js";
-import type { Melody, MelodyNote } from "./melodies.js";
+import { melodyToPhrase, type Melody } from "./melodies.js";
 
 export type ResultLabelKind = "scale_degree" | "solfege" | "interval";
 
@@ -47,12 +47,8 @@ function toToken(note: SpelledNote, octave: number, id: string): NoteToken {
   return { id, note, pitchClass: pitchClassOf(note), octave };
 }
 
-function toPhrase(notes: MelodyNote[], idPrefix: string): PhraseNote[] {
-  return notes.map((mn, i) => ({ token: toToken(mn.note, mn.octave, `${idPrefix}-${i}`), beats: mn.beats }));
-}
-
 export function fullPhrase(melody: Melody): PhraseNote[] {
-  return toPhrase(melody.notes, melody.id);
+  return melodyToPhrase(melody.notes, melody.id);
 }
 
 /** The phrase with the gap note replaced by a rest of the same length. */

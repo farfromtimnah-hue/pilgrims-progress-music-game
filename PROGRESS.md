@@ -281,3 +281,41 @@ None of the Portuguese below has been reviewed by a native speaker. For a childr
 
 **Read first next session**
 - `src/tracks/singer/missing-note/missing-note-quiz.ts` header (the five-step flow), then `melodies.ts` for the public-domain rule.
+
+---
+
+## 2026-07-07 — Singer piece 3: six counterpoint-oriented side quests
+
+**What was built**
+- `src/engine/audio/audio-engine.ts`: second minimal extension — `playPhrases(voices, bpm)` plays several phrase voices simultaneously (melody + companion line), still in context, still one audio system. `replay()` re-triggers all voices.
+- `src/tracks/singer/harmony/motion.ts`: two-voice motion vocabulary shared by piece 3 and (next) piece 4 — `motionBetween` (contrary/oblique/similar/static), `isParallel` (similar motion keeping the same GENERIC/letter interval — so diatonic parallel 3rds count as parallel even when the key alternates major and minor thirds; a test caught the naive same-semitone version being wrong), `analyzeMotion` (per-passage counts + dominant motion).
+- `src/tracks/singer/side-quests/` — all six quests as pure reducers in the exact strike-machine pattern (`(state, event) → {state, effects}`, typed effects, zero UI/audio coupling), sharing one `SideQuestEffect` union in `common.ts`:
+  - **Echo the Guide** (`echo-the-guide.ts`): hear a phrase, echo it back (pitch sequence, octave included). Failure 1 = replay; failure 2 = chunk into halves, echo each, then the whole. Two failures on the final full echo end gently as unsuccessful with a farewell replay.
+  - **Hold the Lantern** (`hold-the-lantern.ts`): hold one pitch while the melody moves. The caller's pitch detection reports checkpoints; the machine counts drifts against `allowedDrifts`, hinting on each drift ("find your note again; it's still there underneath").
+  - **Choose the Better Path** (`choose-the-better-path.ts`): hear the melody with harmony line A, then with line B; pick the more natural companion. Which IS better comes from piece 4's judgment at build time — this machine takes `better` + `explanation` as inputs. Wrong pick 1 = hint + both duets again; wrong pick 2 = reveal explanation, unsuccessful.
+  - **Walking Beside the Melody** (`walking-beside-the-melody.ts`): name how the companion moves (contrary/oblique/similar), graded against `analyzeMotion`'s dominant motion — the answer is computed from the actual voices, never hand-authored where it could drift from the audio.
+  - **Finish the Phrase** (`finish-the-phrase.ts`): a phrase stops on a tendency tone; pick where it wants to go. `expectedResolution` derives the answer from the classic rules (7→1 up, 2→1 down, 4→3 down, 6→5 down) and THROWS on a phrase ending on a restful degree — a content error, not a guess. A wrong ending is played (you hear the un-rest) before the retry.
+  - **Hidden Companion** (`hidden-companion.ts`): a duet plays; identify which candidate line was the inner companion. Candidates can be auditioned alone before choosing; success/final reveal plays the companion alone.
+- 26 new tests (141 total), all prompts/hints/reveals asserted in both languages.
+
+**Decisions made that weren't explicit**
+- All six share the retry discipline from the rest of the game: one hint + re-listen, then a reveal that TEACHES (play the right thing) rather than just "wrong" — instructional, not punitive, matching the strike-machine philosophy without literally reusing it (side quests are one-question experiences; the three-strike machine is for level questions).
+- `isParallel` uses generic (letter) intervals, not semitones — see above; this feeds directly into piece 4's block-harmony detection.
+- Hold the Lantern grades what the pitch-detection layer REPORTS; microphone/pitch-tracking is a UI-session concern behind the same event boundary as everything else.
+- Quest kinds are a `SingerSideQuestKind` union in the track module, not in the engine schema — the schema's `SideQuest` stays track-agnostic and references content by id.
+
+**Open questions for Nicole**
+- Hold the Lantern assumes some pitch-detection capability eventually (mic input). If that's out of scope for the app, the same machine works with a "press and hold while singing" honor-system UI — but say which so the UI session builds the right thing.
+- Echo the Guide compares exact octave. For mixed voices (kids vs adults singing an octave apart) should octave-equivalent echoes count? One-line change if so.
+- The lantern/companion story framing ("hold the lantern", "hidden companion") — does it fit your Pilgrim's Progress chapter narration, or should quest prompts be re-themed?
+
+**⚠️ New PT strings for native-speaker review (same checklist standard)**
+- [ ] Echo: "Escute o guia e depois cante a frase de volta, igualzinha." (is "igualzinha" the right register?); "Vamos por partes — cante só a primeira metade."; "Agora a segunda metade."; "Agora a frase inteira."; "Quase — escute mais uma vez."; "Aqui está mais uma vez — vamos repetir esse caminho depois." — `echo-the-guide.ts`.
+- [ ] Lantern: "Esta é a sua nota — segure a lanterna firme enquanto a melodia caminha ao seu redor."; "A melodia te levou junto — encontre sua nota de novo; ela continua ali embaixo." — `hold-the-lantern.ts`.
+- [ ] Better Path: "Dois companheiros se oferecem para caminhar com a melodia…"; "…o companheiro dá os próprios passos, ou copia cada movimento da melodia?" — `choose-the-better-path.ts`.
+- [ ] Walking: motion names "andando em direções opostas" / "uma voz parada enquanto a outra anda" / "andando juntas na mesma direção" / "as duas vozes paradas"; hint "Acompanhe só a voz de baixo com a mão…" — `walking-beside-the-melody.ts`.
+- [ ] Finish: "A frase para antes de chegar em casa. Para onde ela quer ir?"; "Isso soou como chegar em casa, ou como parar na porta?"; "É para cá que ela estava se inclinando — ouça como descansa." — `finish-the-phrase.ts`.
+- [ ] Hidden Companion: "Alguém está cantando junto, escondido dentro da música…"; "Escute por baixo da melodia — a linha do companheiro é mais discreta, mas tem o próprio desenho."; "Aqui está ele sozinho." — `hidden-companion.ts`.
+
+**Read first next session**
+- `src/tracks/singer/side-quests/common.ts` (the shared effect union), then any one quest file — they all follow the same shape.

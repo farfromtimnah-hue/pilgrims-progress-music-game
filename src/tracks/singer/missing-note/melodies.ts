@@ -10,14 +10,23 @@
  * ⚠️ CONTENT NEEDS NICOLE'S REVIEW: familiarity for her students,
  * PT titles, and whether hymn-repertoire melodies should be added.
  */
+import type { PhraseNote } from "../../../engine/audio/audio-engine.js";
 import type { LocalizedText } from "../../../engine/i18n/localized-text.js";
-import { spelled } from "../../../engine/theory/pitch.js";
+import { pitchClassOf, spelled } from "../../../engine/theory/pitch.js";
 import type { SpelledNote } from "../../../engine/types/schema.js";
 
 export interface MelodyNote {
   note: SpelledNote;
   octave: number;
   beats: number;
+}
+
+/** Convert authored melody notes to an AudioEngine phrase. */
+export function melodyToPhrase(notes: MelodyNote[], idPrefix: string): PhraseNote[] {
+  return notes.map((mn, i) => ({
+    token: { id: `${idPrefix}-${i}`, note: mn.note, pitchClass: pitchClassOf(mn.note), octave: mn.octave },
+    beats: mn.beats,
+  }));
 }
 
 export interface Melody {

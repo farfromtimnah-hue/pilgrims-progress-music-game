@@ -84,7 +84,22 @@ export class AudioEngine {
   /** Play a phrase of note tokens at a tempo, in context. */
   playPhrase(phrase: PhraseNote[], bpm = 80): void {
     this.ensureContext();
+    this.scheduleVoice(phrase, 60 / bpm);
+    this.lastPlayback = () => this.playPhrase(phrase, bpm);
+  }
+
+  /**
+   * Play several phrase voices simultaneously (e.g. melody + companion line),
+   * in context — the Singer track's two-voice hearing exercises.
+   */
+  playPhrases(voices: PhraseNote[][], bpm = 80): void {
+    this.ensureContext();
     const secondsPerBeat = 60 / bpm;
+    for (const voice of voices) this.scheduleVoice(voice, secondsPerBeat);
+    this.lastPlayback = () => this.playPhrases(voices, bpm);
+  }
+
+  private scheduleVoice(phrase: PhraseNote[], secondsPerBeat: number): void {
     let offset = 0;
     for (const { token, beats } of phrase) {
       const duration = beats * secondsPerBeat;
@@ -93,7 +108,6 @@ export class AudioEngine {
       }
       offset += duration;
     }
-    this.lastPlayback = () => this.playPhrase(phrase, bpm);
   }
 
   /** Instantly replay the last note or phrase, in the current context. */

@@ -123,6 +123,21 @@ describe("AudioEngine — phrases and replay", () => {
     expect(backend.notes.map((n) => n.startOffsetSeconds)).toEqual([0, 2]);
   });
 
+  it("playPhrases schedules simultaneous voices on the same grid", () => {
+    const { backend, engine } = makeEngine();
+    engine.playPhrases(
+      [
+        [{ token: token("E"), beats: 1 }, { token: token("F"), beats: 1 }],
+        [{ token: token("C"), beats: 2 }],
+      ],
+      60,
+    );
+    expect(backend.notes).toHaveLength(3);
+    expect(backend.notes.map((n) => n.startOffsetSeconds)).toEqual([0, 1, 0]);
+    engine.replay();
+    expect(backend.notes).toHaveLength(6);
+  });
+
   it("replay() re-triggers the last phrase", () => {
     const { backend, engine } = makeEngine();
     engine.playPhrase([{ token: token("C"), beats: 1 }]);
