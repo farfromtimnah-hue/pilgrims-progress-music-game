@@ -1,0 +1,11 @@
+{
+  "id": "key-signature-full-set",
+  "type": "key_signature_full_set",
+  "title": "Select all accidentals in the key",
+  "trackIds": ["instrumentalist"],
+  "topic": "key_signature",
+  "keyIds": ["C-major", "G-major", "F-major"],
+  "tierParams": {
+    "advanced": { "includeOrderStep": true }
+  }
+}

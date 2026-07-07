@@ -101,3 +101,30 @@ Tone.js gives polyphonic synths with proper envelopes, sample-accurate schedulin
 
 **Read first next session**
 - `src/tracks/instrumentalist/note-token/grade.ts` header comment, then `strike-machine.ts` — the two are composed by feeding `judgeAnswer(...).countsAsMistake` into the reducer.
+
+---
+
+## 2026-07-07 — Piece 5: Key-signature quiz (full-set selection + scaffolded recovery)
+
+**What was built**
+- `src/tracks/instrumentalist/quizzes/key-signature-quiz.ts`:
+  - `gradeFullSet` — full-set selection grading: the answer must contain every accidental in the key and nothing extra, order-insensitive. Reports `missing`, `extras`, and `wrongSpellings` (extras enharmonic to a missing accidental, e.g. G♭ selected where E major needs F♯) so feedback can target the actual misunderstanding.
+  - `recoveryReducer` — the scaffolded recovery flow as a pure reducer, in the exact required order: (1) which side of the circle, sharp or flat; (2) how many; (3) select the actual set; (4) optional naming/ordering step. Wrong answers retry the current step with an escalating-hint counter; step hints are content strings emitted as effects, never rendered here.
+  - `gradeMainAttempt` — orchestrates: correct set passes, anything else enters recovery at step 1.
+- Quiz-template data files (`data/quiz-templates/`) wiring the quiz types into chapter data, including `includeOrderStep` turned on via `tierParams` for Advanced.
+- 15 new tests (61 total): exact-set pass in any order, incomplete set fails, over-selection fails, enharmonic wrong-spelling hint at step 3, flat-key walk (A♭ major), C-major short-circuit, ordering step.
+
+**Decisions made that weren't explicit**
+- Step 4 (ordering) is data-driven per tier via `tierParams.advanced.includeOrderStep` rather than always-on — Beginner/Intermediate complete recovery at step 3.
+- "Side of the circle" accepts a third answer, `none`, so C major / A minor can use the same flow; a correct `none` completes recovery immediately (there is nothing to count or select).
+- Step-3 selection reuses `gradeFullSet`, so the enharmonic wrong-spelling detection works inside recovery too, and the hint names the correct spelling for the key.
+- Ordering is graded against the canonical accidental order generated in `keys.ts` (F♯ C♯ G♯ D♯ A♯ E♯ B♯ / B♭ E♭ A♭ D♭ G♭ C♭ F♭).
+- The recovery flow does not interact with the three-strike machine — recovery *is* the scaffold for this quiz type. If you want a failed main attempt to also feed the strike counter, that's a one-line change in the (future) game loop.
+
+**Open questions for Nicole**
+- After completing recovery, should the student re-attempt the same key's full set to "seal" it, or move on? (Currently the flow just reports completion; the caller decides.)
+- Should the step-4 ordering task also be its own standalone quiz type for Advanced drills?
+
+**Read first next session**
+- `src/tracks/instrumentalist/quizzes/key-signature-quiz.ts` — the header comment explains the full-set rationale and the recovery order.
+- Suggested next build: the game-loop layer that composes quiz graders + strike machine + audio engine per level, then Singer-track logic or narrative content.
