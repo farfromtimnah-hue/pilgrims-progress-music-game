@@ -49,3 +49,31 @@ Build log and session handoff notes for the Pilgrim's Progress Music Game.
 
 **Read first next session**
 - `src/engine/types/schema.ts` top-of-file comment — it explains the two-axis pitch-spelling model everything else builds on.
+
+---
+
+## 2026-07-07 — Piece 3: Audio engine
+
+**What was built**
+- `src/engine/theory/pitch.ts`: shared pitch math — spelled note → pitch class / MIDI / frequency, enharmonic comparison, note naming. Used by both audio and (next piece) grading.
+- `src/engine/audio/`:
+  - `audio-engine.ts` — `AudioEngine`, which enforces the core rule: **a note never sounds in isolation**. If `playNote` is called with no context active, it auto-starts a tonic drone for the active key. Supports tonic drone, sustained pad (1+5), and backing chord (degrees from the key's scale-degree map) contexts, phrase playback at a tempo, and instant `replay()` of the last note or phrase.
+  - `backend.ts` — a small `AudioBackend` interface; the engine's musical rules are unit-tested against a silent fake backend (no browser needed).
+  - `tone-backend.ts` — the real Tone.js implementation.
+- 13 passing tests, including "auto-drone when no context" and "octave follows the letter: B#3 sounds like C4, Cb4 sounds like B3."
+
+**Audio library decision: Tone.js (over raw Web Audio API)**
+Tone.js gives polyphonic synths with proper envelopes, sample-accurate scheduling, and a maintained cross-browser layer. The always-on context requirement means sustained drone/pad/chord layers with clean attack/release fades — hand-rolling that in raw Web Audio means managing oscillator + gain-node lifecycles per voice for no pedagogical gain. Tone.js is isolated behind `AudioBackend`, so swapping to raw Web Audio (or samples) later touches one file.
+
+**Decisions made that weren't explicit**
+- Tonic drone voices the tonic in two octaves only (no third), so the drone doesn't pre-answer major/minor questions.
+- Backing-chord tones are auto-voiced within one octave above the tonic — keeps data authoring simple (`chordDegrees: [1,3,5]`).
+- Scientific-pitch octave convention: the octave belongs to the letter (B♯3 sounds like C4). Tests pin this down since it's the classic enharmonic-octave bug.
+- Changing key clears the active context (a C-major drone must not persist into a G-major question).
+
+**Open questions for Nicole**
+- Synth timbres are placeholders (sine drone, triangle pad, sawtooth chord). Do you eventually want sampled piano/organ sounds instead? (The backend interface supports swapping without touching game logic.)
+- Default phrase tempo is 80 BPM — is that right for your students?
+
+**Read first next session**
+- `src/engine/audio/audio-engine.ts` header comment for the context rule, then its test file for the expected behaviors.
