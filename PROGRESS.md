@@ -319,3 +319,38 @@ None of the Portuguese below has been reviewed by a native speaker. For a childr
 
 **Read first next session**
 - `src/tracks/singer/side-quests/common.ts` (the shared effect union), then any one quest file — they all follow the same shape.
+
+---
+
+## 2026-07-07 — Singer piece 4: harmony-line naturalness judgment
+
+**What was built**
+- `src/tracks/singer/harmony/naturalness.ts`:
+  - `assessLine(melody, line)` — scores one candidate harmony line against the melody on four documented concerns, in priority order: **independence** (contrary +2, oblique +1 per step; plain similar neutral), **not-a-shadow** (each parallel step −2, plus a −4 shadow penalty when more than half the steps are parallel — that line has no life of its own), **singability** (line's own leaps: 4th/5th −1, bigger −2), **consonance** (sounding 2nds/7ths/tritone against the melody −2 each).
+  - `judgeHarmonyLines(melody, lineA, lineB)` — compares the two assessments. If the margin is below `MARGIN_TOO_CLOSE` (2), the verdict is `"too_close_to_call"` — the engine REFUSES to guess. Otherwise it returns the winner plus a bilingual explanation built from the factors that actually separated the lines (at most two reasons, strongest first — e.g. "the other line copies the melody's every step at the same distance — block harmony").
+  - `buildBetterPathQuestion(...)` — the bridge to piece 3's Choose the Better Path quest: judges the lines and THROWS on too-close content, so an un-derivable question can never ship with a silently guessed answer.
+- 9 new tests (**150 total, all passing**; typecheck clean): block-parallel vs independent line, shadow detection, dissonance counting, bilingual explanation, symmetry (swapping lines swaps the verdict), the too-close refusal, and the loud throw at question-build time.
+
+**⚠️ JUDGMENT CALLS FOR NICOLE TO REVIEW (this piece is the subjective one)**
+The rules implement "natural = moving/independent over block harmony" as stated in the spec, but these specifics were NOT derivable from stated rules and are my judgment:
+1. **The weights themselves** (+2 contrary / +1 oblique / −2 parallel step / −4 shadow / −1 & −2 leaps / −2 dissonance). The ORDER of concerns is per your spec; the numbers are pedagogical guesses. They live in one `WEIGHTS` table at the top of `naturalness.ts`.
+2. **Plain similar motion scores 0, not negative** — voices moving the same direction with changing intervals is normal, healthy part-singing; only PARALLEL similar motion (same generic interval kept) reads as block harmony. If you'd rather nudge students away from similar motion generally, `similarStep` is the knob.
+3. **The perfect 4th is treated as consonant** against the melody. Strict two-voice counterpoint calls it a dissonance; congregational harmony doesn't hear it that way. Flip it by adding 5 to `DISSONANT_CLASSES` if you disagree.
+4. **`MARGIN_TOO_CLOSE = 2`** — how different two lines must score before the engine will call one "better." Raise it and more content gets flagged for your hand-authoring; lower it and the engine decides more (and guesses more).
+5. **Shadow threshold**: a line is a "shadow" when MORE THAN HALF its steps are parallel. A hymn alto that parallels for 3 of 8 steps is fine; 5 of 8 is a block.
+None of these can make the engine call a genuinely ambiguous pair — that case throws at content-build time and lands on your desk by design.
+
+**Decisions made that weren't explicit**
+- Explanations are generated from the actual assessment (the factors that separated the lines), not canned per question — so they stay honest when content changes, and they're the same text shown by the Better Path quest on success or reveal.
+- Voices must align note-for-note (same note count); rhythmic independence (suspensions, passing tones against held notes) is future work and flagged as such rather than half-modeled.
+
+**⚠️ New PT strings for native-speaker review (same checklist standard)**
+- [ ] Explanation fragments: "Esse companheiro é mais natural: …"; "a outra linha copia cada passo da melodia à mesma distância — harmonia em bloco" (is "harmonia em bloco" the term you'd use with students?); "ela dá os próprios passos — andando contra a melodia ou segurando enquanto ela anda"; "ela combina com a melodia em vez de brigar com ela"; "ela anda em passos pequenos, fáceis de cantar"; "ela caminha ao lado da melodia como uma linha própria" — `naturalness.ts`.
+
+**Open questions for Nicole**
+- The five judgment calls above, especially the P4 consonance call and the weights.
+- Do you want a small hand-authored answer override in content (a `betterOverride` field) for pairs you judge differently from the engine, or should disagreements always be resolved by retuning the weights?
+
+**Read first next session**
+- `src/tracks/singer/harmony/naturalness.ts` header comment — it states the four concerns and every judgment call, then `motion.ts` for the parallel-motion definition (generic/letter intervals, not semitones).
+- Suggested next build: the game-loop layer composing quiz reducers + strike machine + audio engine per level; or Singer content authoring (interval question sets, harmony-line pairs) once Nicole reviews the song list and judgment calls.

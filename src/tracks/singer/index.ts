@@ -13,6 +13,7 @@ export * from "./intervals/song-references.js";
 export * from "./missing-note/melodies.js";
 export * from "./missing-note/missing-note-quiz.js";
 export * from "./harmony/motion.js";
+export * from "./harmony/naturalness.js";
 export * from "./side-quests/common.js";
 export * from "./side-quests/echo-the-guide.js";
 export * from "./side-quests/hold-the-lantern.js";
