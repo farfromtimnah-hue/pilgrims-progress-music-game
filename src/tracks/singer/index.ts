@@ -10,3 +10,5 @@ export const SINGER_TRACK_ID = "singer";
 
 export * from "./intervals/interval-quiz.js";
 export * from "./intervals/song-references.js";
+export * from "./missing-note/melodies.js";
+export * from "./missing-note/missing-note-quiz.js";

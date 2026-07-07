@@ -109,6 +109,20 @@ describe("AudioEngine — phrases and replay", () => {
     expect(backend.notes.map((n) => n.startOffsetSeconds)).toEqual([0, 1, 2]);
   });
 
+  it("a rest (no token) keeps time silently — later notes stay on the grid", () => {
+    const { backend, engine } = makeEngine();
+    engine.playPhrase(
+      [
+        { token: token("C"), beats: 1 },
+        { beats: 1 }, // rest
+        { token: token("E"), beats: 1 },
+      ],
+      60,
+    );
+    expect(backend.notes).toHaveLength(2);
+    expect(backend.notes.map((n) => n.startOffsetSeconds)).toEqual([0, 2]);
+  });
+
   it("replay() re-triggers the last phrase", () => {
     const { backend, engine } = makeEngine();
     engine.playPhrase([{ token: token("C"), beats: 1 }]);

@@ -251,3 +251,33 @@ None of the Portuguese below has been reviewed by a native speaker. For a childr
 
 **Read first next session**
 - `src/tracks/singer/intervals/interval-quiz.ts` header comment (the two modes), then `song-references.ts` for the public-domain rule.
+
+---
+
+## 2026-07-07 — Singer piece 2: missing-note melodic completion
+
+**What was built**
+- `src/engine/audio/audio-engine.ts`: minimal extension — `PhraseNote.token` is now optional; no token = a rest that keeps time silently (the context layer keeps sounding). This is the ONE audio system growing a feature, not a second one. Test pins that later notes stay on the beat grid across a rest.
+- `src/tracks/singer/missing-note/melodies.ts`: four public-domain melodies authored as spelled notes in a home key, each with a bilingual title and an explicit public-domain note: Twinkle Twinkle / Brilha Brilha Estrelinha (1761), Ode to Joy / Hino à Alegria (Beethoven 1824), When the Saints (traditional, pre-1923), Amazing Grace (NEW BRITAIN, 1829).
+- `src/tracks/singer/missing-note/missing-note-quiz.ts`: the mechanic as a pure reducer. Flow: full phrase plays → replays with one note gapped (rest) → three pitch options (the answer plus its two scale neighbours by default, via `buildMissingNoteQuestion`) → the phrase replays WITH the student's choice — they hear their answer in context — and if wrong, the correct phrase plays right after (the contrast is the lesson) → result labeled per the question's `labelKind`: scale degree ("scale degree 5 in C major" / "o 5º grau em Dó maior"), solfège (movable-do syllable), or interval ("a perfect 5th up from the note before" / "uma quinta justa acima da nota anterior").
+- 15 new tests (115 total); every label kind asserted in both languages.
+- `QuizType` extended with `"missing_note_completion"`.
+
+**Decisions made that weren't explicit**
+- **"Phrase replays correctly with the choice"** in the spec was ambiguous — replay *the correct phrase* vs *replay with the player's choice*. I implemented: always replay with the player's choice (hearing your own answer in context is the ear-training payoff), and additionally replay the correct phrase when the choice was wrong. If you meant something else, it's a two-line change in `missingNoteReducer`.
+- Grading is by **sounding pitch, octave included** — singers answer with their ear, so a right pitch-class in the wrong octave is wrong (they'd sing the wrong note).
+- Distractors default to the two **scale neighbours** of the answer (one step up/down in the key) — close enough to require real hearing, diatonic so nothing sounds obviously alien. Options come sorted low→high; shuffling is the UI's job.
+- A gap at the start of a phrase labels its interval against the note AFTER it, since there is no note before.
+- One choice per question, no retry loop — the mechanic teaches through the replay + label, and repetition comes from more questions, not grinding one. Easy to add a retry mode later if you want it.
+
+**Open questions for Nicole**
+- **Movable-do vs fixed-do for the solfège label in PT** — this matters more here than anywhere: PT note names already ARE fixed-do syllables, so the PT solfège label currently says the syllable is "no dó móvel" to keep the systems distinct. If your students don't use movable do, the `solfege` label kind may be redundant in PT (the scale-degree label may be the right default there).
+- Melody familiarity: are these four melodies known to your students? Should hymns from your congregation's repertoire be added? (They're data in one file; adding one is ~15 lines.)
+- Amazing Grace rhythm is simplified (3/4 feel approximated in beats) — good enough for a gap-hearing exercise, or should it match the hymnal rhythm exactly?
+
+**⚠️ New PT strings for native-speaker review (same checklist standard)**
+- [ ] Melody titles: "Hino à Alegria", "Brilha, Brilha, Estrelinha", "Quando os Santos Vêm Marchando", "Graça Maravilhosa (Amazing Grace)" — `melodies.ts`.
+- [ ] Result labels: "A nota que faltava era … — o Nº grau em …"; "… — cantada “…” no dó móvel desta tonalidade."; "… — uma … acima/abaixo de a nota anterior/a nota seguinte." (grammar check needed: "acima de a nota" should likely contract to "acima da nota" — currently built by template, flag for wording pass) — `missing-note-quiz.ts`.
+
+**Read first next session**
+- `src/tracks/singer/missing-note/missing-note-quiz.ts` header (the five-step flow), then `melodies.ts` for the public-domain rule.

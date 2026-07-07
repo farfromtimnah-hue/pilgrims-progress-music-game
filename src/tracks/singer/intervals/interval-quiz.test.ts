@@ -44,9 +44,9 @@ describe("intervalPhrase", () => {
   it("builds a two-note phrase with the transposed second note", () => {
     const phrase = intervalPhrase(songHintQuestion("reveal"));
     expect(phrase).toHaveLength(2);
-    expect(phrase[0]!.token.note).toEqual(spelled("C"));
-    expect(phrase[1]!.token.note).toEqual(spelled("G")); // P5 up from C4
-    expect(phrase[1]!.token.octave).toBe(4);
+    expect(phrase[0]!.token!.note).toEqual(spelled("C"));
+    expect(phrase[1]!.token!.note).toEqual(spelled("G")); // P5 up from C4
+    expect(phrase[1]!.token!.octave).toBe(4);
   });
 });
 

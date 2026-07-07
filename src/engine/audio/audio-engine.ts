@@ -14,7 +14,8 @@ import { frequencyOf } from "../theory/pitch.js";
 import type { AudioBackend, VoiceHandle } from "./backend.js";
 
 export interface PhraseNote {
-  token: NoteToken;
+  /** Omitted = a rest: the phrase stays silent for `beats` (the context layer keeps sounding). */
+  token?: NoteToken;
   /** Duration in beats. */
   beats: number;
 }
@@ -87,7 +88,9 @@ export class AudioEngine {
     let offset = 0;
     for (const { token, beats } of phrase) {
       const duration = beats * secondsPerBeat;
-      this.backend.playNote(frequencyOf(token.note, token.octave), duration * 0.95, offset, MELODY_GAIN);
+      if (token) {
+        this.backend.playNote(frequencyOf(token.note, token.octave), duration * 0.95, offset, MELODY_GAIN);
+      }
       offset += duration;
     }
     this.lastPlayback = () => this.playPhrase(phrase, bpm);

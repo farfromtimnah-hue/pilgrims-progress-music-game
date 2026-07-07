@@ -180,7 +180,8 @@ export type QuizType =
   | "key_signature_full_set" // select ALL accidentals in the key, no extras
   | "scale_degree" // name/place scale degrees
   | "chord_function" // identify chord function (later chapters)
-  | "interval_recognition"; // Singer: hear an interval, song reference → formal name
+  | "interval_recognition" // Singer: hear an interval, song reference → formal name
+  | "missing_note_completion"; // Singer: complete a familiar phrase's missing note by ear
 
 export interface QuizTemplate {
   id: string;
