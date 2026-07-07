@@ -179,7 +179,8 @@ export type QuizType =
   | "note_token_membership" // pick the notes that belong to the key
   | "key_signature_full_set" // select ALL accidentals in the key, no extras
   | "scale_degree" // name/place scale degrees
-  | "chord_function"; // identify chord function (later chapters)
+  | "chord_function" // identify chord function (later chapters)
+  | "interval_recognition"; // Singer: hear an interval, song reference → formal name
 
 export interface QuizTemplate {
   id: string;

@@ -1,8 +1,12 @@
 /**
- * Singer track — intentionally a stub.
+ * Singer track — harmony-by-ear learning logic.
  *
- * The Singer track shares the world/campaign and the shared engine with the
- * Instrumentalist track but uses different learning logic (built in a later
- * session). Nothing here should import from tracks/instrumentalist.
+ * Shares the world/campaign and the shared engine with the Instrumentalist
+ * track but teaches by ear, not by written theory: song-referenced interval
+ * hearing, melodic completion, and counterpoint-oriented side quests.
+ * Nothing here imports from tracks/instrumentalist.
  */
 export const SINGER_TRACK_ID = "singer";
+
+export * from "./intervals/interval-quiz.js";
+export * from "./intervals/song-references.js";

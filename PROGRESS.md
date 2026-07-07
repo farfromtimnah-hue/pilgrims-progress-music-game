@@ -221,3 +221,33 @@ None of the Portuguese below has been reviewed by a native speaker. For a childr
 **Read first next session**
 - The piece-2 **PT review checklist** above (unshipped until reviewed), then `src/engine/i18n/localized-text.ts`.
 - Suggested next build: Singer track (now safe to build bilingual-first), or the game-loop layer. Any new user-facing string MUST be authored as `LocalizedText` from the start — the schema now enforces it.
+
+---
+
+## 2026-07-07 — Singer piece 1: interval recognition via song references
+
+**What was built**
+- `src/engine/theory/intervals.ts` (shared theory, not singer-only): the 13 simple intervals with bilingual names, `semitonesBetween`, `intervalFromSemitones`, and `transposeByInterval` — spelled transposition (letter-step rule) so played intervals keep the same two-axis spelling discipline as the rest of the engine.
+- `src/tracks/singer/intervals/song-references.ts`: familiar-song reference content, each entry with bilingual title + cue and an explicit public-domain note. Current set: m2↓ Für Elise, M2↑ Happy Birthday/Parabéns pra Você, m3↑ Brahms' Lullaby, M3↑ When the Saints, P4↑ Amazing Grace, P5↑ Twinkle Twinkle/Brilha Brilha Estrelinha, M6↑ Jingle Bells verse.
+- `src/tracks/singer/intervals/interval-quiz.ts`: pure reducer in the house `(state, event) → {state, effects}` pattern. Early mode `song_hint`: interval plays → student picks the matching familiar song → formal name is **revealed** (Beginner) or **asked for** (Intermediate) via `formalNameStep`. Later mode `direct`: no song step — hear it, name it. Playback goes through the ONE audio engine: the `play_interval` effect carries a `PhraseNote[]` for `AudioEngine.playPhrase` (context rule included for free — the interval never sounds bare). Every wrong answer replays the interval.
+- 21 new tests (100 total), hints/reveals asserted in BOTH languages.
+- `QuizType` extended with `"interval_recognition"`.
+
+**Decisions made that weren't explicit**
+- **Interval identity = sounding distance** (semitones), not spelling, because singers grade what they hear; the module header documents that spelling-aware quality (A4 vs d5) can layer on later for notation chapters without changing this.
+- Intervals with no confident public-domain reference (m6, m7, M7, tritone, octave, most descending forms) have NO song entry and are **direct-mode-only** — famous references for those (Star Trek m7, "Maria" tritone, "Over the Rainbow" octave) are all still copyrighted, and I would not invent fake familiarity.
+- A wrong formal name in song-hint mode hints back to the song the student already matched ("same distance as the start of …") — the song stays the anchor until direct mode removes it.
+- Song choices are graded by interval+direction match, so two songs sharing an interval are both correct answers.
+
+**Open questions for Nicole**
+- **Song list needs your review hardest of anything here**: which of these melodies do YOUR students/congregation actually know — especially in Brazil? Swap-in suggestions welcome; entries are data in one file.
+- Should hymns from your own repertoire replace the secular folk references? (Amazing Grace and When the Saints are already church-adjacent.)
+
+**⚠️ New PT strings for native-speaker review (same checklist standard)**
+- [ ] Interval names: "uníssono", "segunda menor/maior", "terça menor/maior", "quarta justa", "trítono", "quinta justa", "sexta menor/maior", "sétima menor/maior", "oitava" — `intervals.ts`.
+- [ ] Song titles in PT: "Parabéns pra Você", "Acalanto de Brahms", "Quando os Santos Vêm Marchando", "Graça Maravilhosa (Amazing Grace)" (uncertain — what does your congregation call it?), "Brilha, Brilha, Estrelinha", "Bate o Sino (verso)" (uncertain — is the Brazilian "Bate o Sino" verse melody the same as the Jingle Bells verse? If not, this cue is wrong in PT) — `song-references.ts`.
+- [ ] Song cues, e.g. "“Para-BÉNS” — o passo que sobe", "o salto inicial da melodia" — `song-references.ts`.
+- [ ] Quiz hints: "Escute de novo e cante o começo de cada música na cabeça — qual delas começa com esse som?"; "Essa não. É a mesma distância do começo de … — escute mais uma vez."; "…a distância é um passo, um salto pequeno ou um salto grande?"; reveal line "Os músicos chamam essa distância de …" — `interval-quiz.ts`.
+
+**Read first next session**
+- `src/tracks/singer/intervals/interval-quiz.ts` header comment (the two modes), then `song-references.ts` for the public-domain rule.
