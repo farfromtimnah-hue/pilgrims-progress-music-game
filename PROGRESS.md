@@ -200,3 +200,24 @@ None of the Portuguese below has been reviewed by a native speaker. For a childr
 
 **Read first next session**
 - `src/engine/i18n/note-names.ts`, then the checklist above.
+
+---
+
+## 2026-07-07 — Bilingual retrofit, Piece 3: bilingual test coverage
+
+**What was built**
+- `src/engine/i18n/note-names.test.ts`: pins the PT solfège mapping (all seven syllables, accidental symbols incl. 𝄪/𝄫) and `localizedNoteName` pairs.
+- `keys.test.ts`: bilingual display names asserted ("E♭ major" / "Mi♭ maior", "C♯ minor" / "Dó♯ menor").
+- `grade.test.ts`: the teaching prompt and the wrong-note prompt are asserted in BOTH languages, with note names localized per language (D♯/E♭ in EN, Ré♯/Mi♭ in PT) and the key vocabulary present ("key signature" / "armadura de clave").
+- `key-signature-quiz.test.ts`: the enharmonic wrong-spelling hint asserted in both languages (F♯/G♭ vs Fá♯/Sol♭); new tests that hints name the key per language and that the ordering mnemonics use letters in EN and solfège in PT.
+- Full suite: **79 tests, all passing**; typecheck clean. Nothing English-only broke — every pre-existing behavioral test still passes unchanged except where it asserted on string content, which now asserts on `.en` (same expectation) plus `.pt`.
+
+**Decisions made that weren't explicit**
+- Tests assert `contains` on the load-bearing words (note names, "armadura de clave") rather than full-sentence equality, so native-speaker wording fixes to the PT strings won't break tests unless they change the musical content.
+
+**Open questions for Nicole**
+- None new — the piece-2 PT review checklist is the actionable list.
+
+**Read first next session**
+- The piece-2 **PT review checklist** above (unshipped until reviewed), then `src/engine/i18n/localized-text.ts`.
+- Suggested next build: Singer track (now safe to build bilingual-first), or the game-loop layer. Any new user-facing string MUST be authored as `LocalizedText` from the start — the schema now enforces it.

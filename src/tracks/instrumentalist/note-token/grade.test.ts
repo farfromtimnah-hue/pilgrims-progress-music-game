@@ -107,6 +107,28 @@ describe("judgeAnswer — tier policy on Close answers", () => {
     expect(j.feedback.kind).toBe("teaching_prompt");
   });
 
+  it("teaching prompt carries both languages, note names localized (E♭ / Mi♭)", () => {
+    const j = judgeAnswer(closeAnswer, ebMajor, INTERMEDIATE, false);
+    expect(j.feedback.kind).toBe("teaching_prompt");
+    if (j.feedback.kind === "teaching_prompt") {
+      expect(j.feedback.message.en).toContain("D♯");
+      expect(j.feedback.message.en).toContain("E♭");
+      expect(j.feedback.message.en).toContain("key signature");
+      expect(j.feedback.message.pt).toContain("Ré♯");
+      expect(j.feedback.message.pt).toContain("Mi♭");
+      expect(j.feedback.message.pt).toContain("armadura de clave");
+    }
+  });
+
+  it("wrong-note prompt carries both languages", () => {
+    const j = judgeAnswer(spelled("E"), ebMajor, BEGINNER, false);
+    expect(j.feedback.kind).toBe("mistake_prompt");
+    if (j.feedback.kind === "mistake_prompt") {
+      expect(j.feedback.message.en).toContain("E isn't in this key");
+      expect(j.feedback.message.pt).toContain("Mi não está nesta tonalidade");
+    }
+  });
+
   it("wrong answers count as mistakes on every tier", () => {
     for (const tier of [BEGINNER, INTERMEDIATE, ADVANCED]) {
       expect(judgeAnswer(spelled("E"), ebMajor, tier, false).countsAsMistake).toBe(true);

@@ -44,6 +44,11 @@ describe("buildKey key signatures", () => {
     expect(keySignature.accidentals).toEqual([]);
   });
 
+  it("builds bilingual display names (letters in EN, solfège in PT)", () => {
+    expect(buildKey(spelled("E", "b"), "major").key.displayName).toEqual({ en: "E♭ major", pt: "Mi♭ maior" });
+    expect(buildKey(spelled("C", "#"), "minor").key.displayName).toEqual({ en: "C♯ minor", pt: "Dó♯ menor" });
+  });
+
   it("generates all 15 standard major keys with 0–7 accidentals", () => {
     const keys = allMajorKeys();
     expect(keys).toHaveLength(15);

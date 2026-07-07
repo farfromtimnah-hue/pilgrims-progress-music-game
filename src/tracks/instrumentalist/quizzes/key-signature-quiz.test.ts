@@ -105,6 +105,29 @@ describe("recovery flow — the exact four-step order", () => {
     expect(t.effects[0]!.type).toBe("retry_step");
   });
 
+  it("hints carry both languages with the key named per language", () => {
+    const t = step(INITIAL_RECOVERY_STATE, { step: "circle_side", side: "flat" });
+    const effect = t.effects[0]!;
+    expect(effect.type).toBe("retry_step");
+    if (effect.type === "retry_step") {
+      expect(effect.hint.en).toContain("E major");
+      expect(effect.hint.pt).toContain("Mi maior");
+      expect(effect.hint.pt).toContain("círculo das quintas");
+    }
+  });
+
+  it("ordering mnemonics use letters in EN and solfège in PT", () => {
+    const opts = { includeOrderStep: true };
+    const atOrder: RecoveryState = { step: "order_set", attemptsOnStep: 0 };
+    const t = step(atOrder, { step: "order_set", notes: [...E_MAJOR_SET].reverse() }, eMajor, opts);
+    const effect = t.effects[0]!;
+    expect(effect.type).toBe("retry_step");
+    if (effect.type === "retry_step") {
+      expect(effect.hint.en).toContain("F C G D A E B");
+      expect(effect.hint.pt).toContain("Fá Dó Sol Ré Lá Mi Si");
+    }
+  });
+
   it("wrong count retries step 2", () => {
     const atCount: RecoveryState = { step: "accidental_count", attemptsOnStep: 0 };
     const t = step(atCount, { step: "accidental_count", count: 3 });
@@ -123,6 +146,8 @@ describe("recovery flow — the exact four-step order", () => {
     if (effect.type === "retry_step") {
       expect(effect.hint.en).toContain("F♯");
       expect(effect.hint.en).toContain("G♭");
+      expect(effect.hint.pt).toContain("Fá♯");
+      expect(effect.hint.pt).toContain("Sol♭");
     }
   });
 
