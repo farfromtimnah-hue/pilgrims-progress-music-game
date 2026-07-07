@@ -128,3 +128,24 @@ Tone.js gives polyphonic synths with proper envelopes, sample-accurate schedulin
 **Read first next session**
 - `src/tracks/instrumentalist/quizzes/key-signature-quiz.ts` — the header comment explains the full-set rationale and the recovery order.
 - Suggested next build: the game-loop layer that composes quiz graders + strike machine + audio engine per level, then Singer-track logic or narrative content.
+
+---
+
+## 2026-07-07 — Bilingual retrofit, Piece 1: LocalizedText + forced language choice
+
+**What was built**
+- `src/engine/i18n/localized-text.ts`: `LocalizedText { en, pt }` and `display(text, lang)` — the Directory-app pattern adapted to TypeScript: every user-facing string carries both languages, and the active language is resolved at *read* time, never at data-authoring time. No fallback language.
+- `src/engine/i18n/language-store.ts`: language-choice persistence with **no default** — `getStoredLanguage` returns `null` until an explicit EN/PT choice exists, and a corrupt stored value reads as "no choice," never as a default.
+- `src/engine/i18n/language-select-screen.ts`: `ensureLanguageSelected(backend, root)` — the one deliberate UI exception in this engine-only project. If no choice is persisted it renders two unstyled buttons ("English" / "Português", each labelled in its own language) and resolves only on a click; game content must `await` it before loading anything.
+- 10 new tests (71 total), including "gate does not resolve without a click" and "corrupt value ≠ default." `happy-dom` added as a dev dependency for the one DOM test.
+
+**Decisions made that weren't explicit**
+- **Persistence approach**: checked first, per the brief — nothing in this project persists anything yet (`src/engine/progress/` is an empty stub; `PlayerProgress` is schema-only). So there was no existing storage call to copy. The project's established pattern for external concerns is the audio one — `AudioBackend` interface + real `ToneBackend` + silent fake for tests — so language storage mirrors it exactly: `LanguageStorageBackend` interface, `LocalStorageLanguageBackend` (browser `localStorage`, key `ppmg.language`), `InMemoryLanguageBackend` for tests. When player progress gets persisted later it should adopt this same shape.
+- The choice-screen button labels are plain strings, not `LocalizedText` — this screen is the one surface shown *before* a language exists, so each option is labelled in its own language.
+- `Language` is exactly `"en" | "pt"`; adding a language later means widening the union and letting the compiler point at every `LocalizedText`.
+
+**Open questions for Nicole**
+- Should the language choice be changeable later from a settings surface, or is once-per-device fine? (`storeLanguage` supports overwriting; nothing exposes it yet.)
+
+**Read first next session**
+- `src/engine/i18n/localized-text.ts` — the header comment states the read-time-resolution rule everything else follows.
