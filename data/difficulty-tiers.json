@@ -1,0 +1,22 @@
+{
+  "tiers": [
+    {
+      "id": "beginner",
+      "name": "Beginner",
+      "closeAnswerPolicy": "neutral",
+      "description": "Close (wrong-spelling) answers do no damage; gentle prompts only."
+    },
+    {
+      "id": "intermediate",
+      "name": "Intermediate",
+      "closeAnswerPolicy": "teach",
+      "description": "Close answers trigger a corrective teaching prompt."
+    },
+    {
+      "id": "advanced",
+      "name": "Advanced",
+      "closeAnswerPolicy": "penalize_if_notation_chapter",
+      "description": "Close answers count as real mistakes when the chapter tests notation precision."
+    }
+  ]
+}

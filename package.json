@@ -1,0 +1,20 @@
+{
+  "name": "pilgrims-progress-music-game",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Educational music game for church music students — shared engine plus Instrumentalist and Singer learner tracks.",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "tone": "^15.0.4"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "vitest": "^2.0.0"
+  }
+}

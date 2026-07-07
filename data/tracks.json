@@ -1,0 +1,18 @@
+{
+  "tracks": [
+    {
+      "id": "instrumentalist",
+      "name": "Instrumentalist",
+      "description": "Key signature first, then note-in-key membership, then scale-degree numbers, then chord function.",
+      "learningSequence": ["key_signature", "note_in_key", "scale_degree", "chord_function"],
+      "enabled": true
+    },
+    {
+      "id": "singer",
+      "name": "Singer",
+      "description": "Singer track — learning logic to be defined in a later session.",
+      "learningSequence": [],
+      "enabled": false
+    }
+  ]
+}
