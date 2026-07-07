@@ -77,3 +77,27 @@ Tone.js gives polyphonic synths with proper envelopes, sample-accurate schedulin
 
 **Read first next session**
 - `src/engine/audio/audio-engine.ts` header comment for the context rule, then its test file for the expected behaviors.
+
+---
+
+## 2026-07-07 — Piece 4: Instrumentalist note-token logic + three-strike scaffold
+
+**What was built**
+- `src/engine/theory/keys.ts`: key/scale generator — spells any major or natural-minor scale from tonic + mode using the consecutive-letter rule, and derives the key signature (canonical F♯-C♯-G♯… / B♭-E♭-A♭… order), scale-degree map, and circle side. All 15 standard major keys generate correctly, including C♯ major (with E♯, B♯) and C♭ major (with F♭, C♭).
+- `src/tracks/instrumentalist/note-token/grade.ts`: three-state grading. **correct** = in key and spelled the key's way; **close** = same sounding pitch, wrong spelling (returns the spelling the key calls for); **wrong** = pitch not in the key. `judgeAnswer` applies the tier policy on Close: Beginner neutral, Intermediate teaching prompt, Advanced counts it as a real mistake only when the chapter's `testsNotationPrecision` flag is set.
+- `src/tracks/instrumentalist/scaffold/strike-machine.ts`: three-strike machine as a pure reducer `(state, event) → {state, effects}` — zero UI coupling. Strike 1 = damage + short prompt; strike 2 = pause + smaller diagnostic question; strike 3 = scaffold sequence, then re-entry with strikes cleared.
+- 33 new tests (46 total), covering all the enharmonic edge cases: B♯/E♯ correct in C♯ major, C♭/F♭ correct in C♭ major, C natural graded Close in C♯ major with B♯ as the expected spelling, B♯ graded Close (not correct) in C major.
+
+**Decisions made that weren't explicit**
+- Keys are *generated* from theory rules rather than hand-authored in JSON — hand-typed accidental tables are where enharmonic bugs come from. Content files reference keys by id (e.g. `"Eb-major"`); `getKey()` resolves them.
+- A Close answer that tier policy treats as non-mistake (Beginner/Intermediate) never reaches the strike machine — grading decides *what it was*, policy decides *what it costs*, the machine only counts real mistakes.
+- Correct answers clear accumulated strikes (recovery is rewarded); damage applies only on strike 1 — strikes 2 and 3 pause/teach instead of stacking more damage, per the "instructional, not punitive" brief.
+- Failing the strike-2 diagnostic escalates straight into the scaffold sequence (the gap is confirmed); passing it resumes at 2 strikes, so the next real mistake scaffolds.
+- Minor scales are natural minor for now; harmonic/melodic variants can be added as new `KeyMode`s when chord-function chapters need them.
+
+**Open questions for Nicole**
+- Should strikes reset between questions within a level, or persist across the level? (Currently the machine is instantiated per question-context; the caller decides its lifetime.)
+- On strike 2, should the diagnostic question always be about the key signature (per the pedagogy order), or vary by quiz topic?
+
+**Read first next session**
+- `src/tracks/instrumentalist/note-token/grade.ts` header comment, then `strike-machine.ts` — the two are composed by feeding `judgeAnswer(...).countsAsMistake` into the reducer.
