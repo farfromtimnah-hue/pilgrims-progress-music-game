@@ -383,3 +383,28 @@ None of these can make the engine call a genuinely ambiguous pair — that case 
 
 **Read first next session**
 - `src/game/level-flow.ts` header comment (the pass rule and what's delegated where), then `challenges.ts` for the materializer hook content sessions will fill.
+
+---
+
+## 2026-07-10 — Level flow, Piece 2: player progress tracking
+
+**What was built**
+- `src/game/progress.ts`:
+  - `applyLevelResult(existing, playerId, result, timestamp)` — the pure fold from a level-flow `LevelResult` into the schema's `PlayerProgress` entity. One record per (player, track, tier), since the schema carries `trackId`/`tierId` on the record; per-tier completion of the same level lives in separate records, which is exactly what piece 3's emblem check needs. Each `ChallengeResult` becomes a `QuizAttemptRecord` (three-state answerResults, strikesUsed, enteredScaffoldSequence) so the analytics hooks designed in the schema session are actually fed.
+  - `ProgressStore` — persistence over a `ProgressStorageBackend` (browser `LocalStorageProgressBackend`, key `ppmg.progress.<playerId>`; `InMemoryProgressBackend` for tests), exactly the pattern language-store established and its header comment promised progress would adopt. Also `grantRewards` / `grantHarmonicUnlocks` (both idempotent) for piece 3, and `earnedRewardIds(playerId)` across all of a player's records.
+- 7 tests (164 total, all passing; typecheck clean). The LevelResults in the tests come from actually running the level flow over the real missing-note quiz — not hand-built fixtures.
+
+**Decisions made that weren't explicit**
+- **Re-completion semantics**: `completedLevelIds` behaves as a set (replaying a passed tier is a no-op there), `attemptHistory` always appends (it's history — replays enrich it). Nothing is ever removed or rewritten, so prior progress can't be corrupted by replay.
+- A **failed or abandoned** run appends attempt records but never touches `completedLevelIds`.
+- All of a player's records persist as ONE JSON blob per player (not one key per tier) so a record update is atomic and `allForPlayer` needs no key enumeration.
+- Corrupt stored JSON (unparseable or wrong shape) reads as "no progress" — same no-default rule as the language store — and the next write starts clean.
+- The store takes an injectable `now()` clock (defaults to `Date.now` ISO); the pure core takes timestamps as parameters, keeping the fold testable and deterministic.
+- `applyLevelResult` throws when handed a record whose track/tier doesn't match the result — a mismatched fold is a programming error, not data to merge.
+
+**Open questions for Nicole**
+- `keyMastery` (per-key learning/practicing/mastered) is still untouched — what should promote a key from "practicing" to "mastered"? (Suggest: deferred until real chapter content exists to define exposure counts.)
+- Is one shared device profile per player id fine for now, or will kids share a tablet enough that profile switching UI needs to come earlier?
+
+**Read first next session**
+- `src/game/progress.ts` header comment (record-per-track+tier shape and re-completion semantics).
