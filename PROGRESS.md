@@ -354,3 +354,32 @@ None of these can make the engine call a genuinely ambiguous pair — that case 
 **Read first next session**
 - `src/tracks/singer/harmony/naturalness.ts` header comment — it states the four concerns and every judgment call, then `motion.ts` for the parallel-motion definition (generic/letter intervals, not semitones).
 - Suggested next build: the game-loop layer composing quiz reducers + strike machine + audio engine per level; or Singer content authoring (interval question sets, harmony-line pairs) once Nicole reviews the song list and judgment calls.
+
+---
+
+## 2026-07-10 — Level flow, Piece 1: the level-flow orchestrator (`src/game/`)
+
+**What was built**
+- New `src/game/` layer — the "caller" every pure reducer in `src/tracks` was designed for. It contains NO grading, state-machine, or audio logic; it imports and orchestrates the committed modules.
+- `src/game/challenges.ts`:
+  - `Challenge` union — the five playable challenge kinds: `note_token`, `key_signature` (instrumentalist), `interval`, `missing_note`, `side_quest` (singer). Each kind points at its owning module.
+  - A uniform side-quest adapter (`startSideQuest` / `reduceSideQuest`) over the six real singer reducers, so the orchestrator routes one opaque event stream instead of six type-specific ones.
+  - `ChallengeMaterializer` — the hook that turns a level's content refs (quiz template ids / side-quest ids) into concrete challenge instances; `materializeInstrumentalistTemplate` covers the two existing instrumentalist template types from their JSON, and `buildChallengeSequence` walks a level's refs (templates first, then side quests), skipping refs the materializer maps to null (other track's content).
+- `src/game/level-flow.ts`: `startLevel(plan)` + `levelFlowReducer(state, event, plan)` — one shared entry point regardless of track. Routes `answer_note` → `judgeAnswer` + `strikeReducer`; `submit_full_set`/`recovery_answer` → `gradeMainAttempt`/`recoveryReducer`; singer events → the real quiz/side-quest reducers. Emits tagged effects (feedback, strike, recovery, playback passthroughs) and finally `level_complete` with a `LevelResult`: outcome (passed/failed/abandoned), strikesUsed, closeCallCount, totalAttempts, enteredScaffoldSequence, and per-challenge `ChallengeResult`s (incl. three-state `answerResults` ready for the progress attempt history).
+- `src/game/audio-router.ts`: `routeEffectsToAudio(engine, effects)` — maps forwarded playback effects (`play_interval`, `play_phrase`, `play_duet`, `set_key`) onto the ONE `AudioEngine`.
+- 7 integration tests (157 total, all passing; typecheck clean) proving REAL modules end-to-end: an instrumentalist level built from the actual `chapter-01.json` + template JSON (Close answer produces grade.ts's bilingual teaching prompt; wrong answers walk strikes 1→2→3 through the real machine incl. diagnostic and scaffold; failed full-set enters the real recovery flow), and a singer level (real song references, `buildMissingNoteQuestion`, `buildBetterPathQuestion` — naturalness.ts picks the winner), plus the real `AudioEngine` over a silent backend confirming the auto-context rule fires during a level.
+
+**Decisions made that weren't explicit**
+- **Pass rule**: a level is passed when every challenge completes successfully. The instrumentalist scaffolding path (strikes, diagnostic, scaffold sequence, key-signature recovery) is instructional, not a gate — working through it still passes; what it cost is recorded. Singer one-shot challenges (missing note, side quests) CAN complete unsuccessfully, which fails the level for that run — replays are cheap and re-completion is piece 2's job.
+- **Time vs attempts**: the reducer is pure (no clock), so the result records attempts/mistakes; wall-clock timing, if ever wanted, is the caller's to measure and piece 2 stamps timestamps at persistence time.
+- Note-token challenge completes after N correct picks (`requiredCorrect` = half the template's `tokenCount`, since roughly half a mixed token set is in-key); actual token-set generation is content-authoring work for a future session and slots into the materializer.
+- Strike/recovery lifetime: one strike machine per note-token challenge, one recovery flow per key-signature challenge — this fixes the piece-4 open question "per question or per level" at per-challenge, revisable in one place (`initialRuntime`).
+- Answers submitted while the strike machine is paused (diagnostic/scaffold phases) are ignored, not graded — the pause is real.
+- `key_signature` completing via recovery still counts as succeeded (recovery IS the scaffold for that quiz type, per piece 5's notes), with `usedRecovery: true` recorded.
+
+**Open questions for Nicole**
+- Should a singer level failed by one unsuccessful side quest be replayable from that challenge, or from the level start? (Currently: the whole level replays; the orchestrator could resume mid-level if you want.)
+- Is "half of tokenCount" the right number of correct picks for the note-token quiz, or should the count be its own tier param?
+
+**Read first next session**
+- `src/game/level-flow.ts` header comment (the pass rule and what's delegated where), then `challenges.ts` for the materializer hook content sessions will fill.
