@@ -1,0 +1,44 @@
+{
+  "rewards": [
+    {
+      "id": "badge-ch01-beginner-crown",
+      "kind": "badge",
+      "name": { "en": "Chapter 1 Crown", "pt": "Coroa do Capítulo 1" },
+      "description": {
+        "en": "Completed every level of Chapter 1 at Beginner.",
+        "pt": "Completou todos os níveis do Capítulo 1 no Iniciante."
+      },
+      "badge": { "shape": "crown", "chapterId": "ch01", "tierId": "beginner" }
+    },
+    {
+      "id": "badge-ch01-intermediate-lantern",
+      "kind": "badge",
+      "name": { "en": "Chapter 1 Lantern & Scroll", "pt": "Lanterna e Pergaminho do Capítulo 1" },
+      "description": {
+        "en": "Completed every level of Chapter 1 at Intermediate.",
+        "pt": "Completou todos os níveis do Capítulo 1 no Intermediário."
+      },
+      "badge": { "shape": "lantern_scroll", "chapterId": "ch01", "tierId": "intermediate" }
+    },
+    {
+      "id": "badge-ch01-advanced-seal",
+      "kind": "badge",
+      "name": { "en": "Chapter 1 Seal", "pt": "Selo do Capítulo 1" },
+      "description": {
+        "en": "Completed every level of Chapter 1 at Advanced.",
+        "pt": "Completou todos os níveis do Capítulo 1 no Avançado."
+      },
+      "badge": { "shape": "seal", "chapterId": "ch01", "tierId": "advanced" }
+    },
+    {
+      "id": "badge-ch01-pilgrimage-emblem",
+      "kind": "badge",
+      "name": { "en": "Chapter 1 Pilgrimage Emblem", "pt": "Emblema de Peregrinação do Capítulo 1" },
+      "description": {
+        "en": "Mastered Chapter 1 at all three tiers.",
+        "pt": "Dominou o Capítulo 1 nos três níveis de dificuldade."
+      },
+      "badge": { "shape": "pilgrimage_emblem", "chapterId": "ch01" }
+    }
+  ]
+}

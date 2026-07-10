@@ -8,3 +8,4 @@ export * from "./challenges.js";
 export * from "./level-flow.js";
 export * from "./audio-router.js";
 export * from "./progress.js";
+export * from "./rewards.js";

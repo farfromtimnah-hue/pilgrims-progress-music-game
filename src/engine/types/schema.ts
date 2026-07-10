@@ -250,12 +250,31 @@ export interface AudioCue {
 
 export type RewardKind = "badge" | "item" | "cosmetic" | "story_beat" | "currency";
 
+/** The badge iconography per tier: crown (Beginner), lantern/scroll
+ *  (Intermediate), seal (Advanced), and the full pilgrimage emblem for
+ *  mastering all three tiers of a chapter. Track-agnostic by design. */
+export type BadgeShape = "crown" | "lantern_scroll" | "seal" | "pilgrimage_emblem";
+
+/**
+ * What earns a badge reward — the data the shared badge rule engine
+ * (src/game/rewards.ts) is keyed on. `tierId` present: completing every
+ * level of the chapter at that tier. `tierId` absent (the pilgrimage
+ * emblem): completing the chapter at all three tiers.
+ */
+export interface BadgeCriteria {
+  shape: BadgeShape;
+  chapterId: string;
+  tierId?: DifficultyTierId;
+}
+
 export interface Reward {
   id: string;
   kind: RewardKind;
   name: LocalizedText;
   description: LocalizedText;
   amount?: number;
+  /** Present on kind "badge": what earns it (data, not code). */
+  badge?: BadgeCriteria;
 }
 
 /**

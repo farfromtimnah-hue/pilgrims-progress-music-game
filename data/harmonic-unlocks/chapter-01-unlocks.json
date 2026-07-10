@@ -1,0 +1,10 @@
+{
+  "harmonicUnlocks": [
+    {
+      "id": "unlock-ch01-sustained-pad",
+      "name": { "en": "The Sustained Pad", "pt": "O Colchão Sonoro" },
+      "unlocks": { "audioCueIds": ["cue-sustained-pad-C"] },
+      "requiredChapterId": "ch01"
+    }
+  ]
+}

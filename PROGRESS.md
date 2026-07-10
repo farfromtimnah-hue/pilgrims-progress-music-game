@@ -408,3 +408,30 @@ None of these can make the engine call a genuinely ambiguous pair — that case 
 
 **Read first next session**
 - `src/game/progress.ts` header comment (record-per-track+tier shape and re-completion semantics).
+
+---
+
+## 2026-07-10 — Level flow, Piece 3: badge & reward assignment
+
+**What was built**
+- Schema: `Reward` grew an optional `badge?: BadgeCriteria` field (`shape` crown / lantern_scroll / seal / pilgrimage_emblem, `chapterId`, optional `tierId`) — badge criteria are DATA on the existing rewards entity, not code. No tier ↔ badge mapping is hardcoded anywhere.
+- `src/game/rewards.ts`:
+  - `evaluateChapterGrants(chapter, rewards, harmonicUnlocks, progressByTier, alreadyEarned, alreadyHeld)` — the one shared, track-agnostic rule engine, keyed by tier completion: a badge with a `tierId` is earned when every level of its chapter is complete at that tier; a badge with NO tier (the pilgrimage emblem) is earned when the chapter is complete at all three tiers. Harmonic unlocks with `requiredChapterId` open on the FIRST tier completion of that chapter. Pure — no store, no clock.
+  - `settleLevelResult(store, playerId, result, chapter, rewards, unlocks)` — the piece 1→2→3 pipeline in one call: fold the LevelResult into progress, evaluate grants, and record them (idempotently) on the tier record whose completion triggered them.
+- Sample data proving the shape: `data/rewards/chapter-01-rewards.json` (four ch01 badges, bilingual names) and `data/harmonic-unlocks/chapter-01-unlocks.json`.
+- 5 tests (169 total, all passing; typecheck clean), including the required full-chapter badge-assignment test: chapter 1's real level played through the real level flow at all three tiers → crown, then lantern/scroll, then seal + emblem together on the third completion; re-completion grants nothing twice; the singer track earns the same badges from the same rules; a failed level earns nothing.
+
+**Decisions made that weren't explicit**
+- Tier badges are per **chapter**-at-tier (complete every level of the chapter at that tier), matching "a full pilgrimage emblem for mastering all three on a chapter" — the emblem is the same rule with all three tiers required. If Nicole wants per-LEVEL badges too, that's new criteria data, not new code.
+- **Harmonic unlocks open on first tier completion** of their chapter (any tier) — new musical material shouldn't wait for full mastery. One-line change in `evaluateChapterGrants` if the design wants Advanced-gated unlocks.
+- Grants are recorded on the progress record of the tier that triggered them; "does the player hold X" reads across records via `ProgressStore.earnedRewardIds`, since the emblem inherently spans tiers.
+- The `shape` field is iconography metadata for the future UI; the rule engine keys only on chapterId + tierId presence, so shapes can be re-themed freely in data.
+- Badges are track-agnostic by construction (nothing in the engine reads trackId): a singer completing ch01 and an instrumentalist completing ch01 earn the same badge ids. If Nicole wants per-track badge variants later, that's again criteria data.
+
+**Open questions for Nicole**
+- Should the pilgrimage emblem require the three tiers on the SAME track (current behavior reads per-track records for the played track), or should a chapter mastered partly on each track ever combine? (Currently: same track only.)
+- Do rewards other than badges (items, story beats) also key off tier completion, or off single-level completion? The engine handles badges only until real reward content exists.
+
+**Read first next session**
+- `src/game/rewards.ts` header comment, then `data/rewards/chapter-01-rewards.json` for the criteria shape.
+- Suggested next build: real chapter/level content authoring (song choices + naturalness weight tuning with Nicole), or the UI session on top of `src/game/` — `settleLevelResult` is the single call a UI needs after a level ends.
