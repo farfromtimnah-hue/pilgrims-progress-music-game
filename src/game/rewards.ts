@@ -9,9 +9,9 @@
  * Everything is data-driven from the existing entities:
  *   - Reward (kind "badge") carries BadgeCriteria — which chapter, which
  *     tier (or no tier = the all-three-tiers emblem).
- *   - HarmonicUnlock carries requiredChapterId — granted on the FIRST tier
- *     completion of that chapter (new musical material opens as the player
- *     advances; it doesn't wait for mastery of every tier).
+ *   - HarmonicUnlock carries requiredChapterId — granted on ADVANCED tier
+ *     completion of that chapter (richer harmony is earned through mastery,
+ *     not opened on the first tier the player clears).
  *
  * `settleLevelResult` is the piece-1 → piece-2 → piece-3 pipeline in one
  * call: record the level result, then evaluate and grant whatever the
@@ -61,7 +61,7 @@ export function evaluateChapterGrants(
   const completeAt = (tierId: DifficultyTierId): boolean =>
     chapterCompleteAtTier(chapter, progressByTier[tierId]);
   const completeAtAll = ALL_TIER_IDS.every(completeAt);
-  const completeAtAny = ALL_TIER_IDS.some(completeAt);
+  const completeAtAdvanced = completeAt("advanced");
 
   const rewardIds = rewards
     .filter((reward) => {
@@ -78,7 +78,7 @@ export function evaluateChapterGrants(
     .filter(
       (u) =>
         u.requiredChapterId === chapter.id &&
-        completeAtAny &&
+        completeAtAdvanced &&
         !alreadyHeldUnlockIds.includes(u.id),
     )
     .map((u) => u.id);

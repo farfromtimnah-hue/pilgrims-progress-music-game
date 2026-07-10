@@ -435,3 +435,17 @@ None of these can make the engine call a genuinely ambiguous pair — that case 
 **Read first next session**
 - `src/game/rewards.ts` header comment, then `data/rewards/chapter-01-rewards.json` for the criteria shape.
 - Suggested next build: real chapter/level content authoring (song choices + naturalness weight tuning with Nicole), or the UI session on top of `src/game/` — `settleLevelResult` is the single call a UI needs after a level ends.
+
+---
+
+## 2026-07-10 — Harmonic unlocks now gated on Advanced tier completion
+
+**What changed**
+- `src/game/rewards.ts` (`evaluateChapterGrants`): harmonic unlocks with `requiredChapterId` now open only when their chapter is complete at the **Advanced** tier — previously they opened on the FIRST tier completion of the chapter (any tier). This was the exact one-line design lever called out in the Piece 3 entry (`completeAtAny` → `completeAt("advanced")`), plus the header comment.
+- `src/game/rewards.test.ts`: the tier-progression test now asserts no unlock on Beginner or Intermediate completion and `unlock-ch01-sustained-pad` arriving with the Advanced seal + emblem. No other tests touched (the pure `evaluateChapterGrants` test already completes all three tiers; storage-layer unlock tests in `progress.test.ts` are grant-mechanics only).
+
+**Why**
+- Design decision confirmed by Nicole: richer harmony should be **earned through mastery**, not given early — harmonic unlocks require Advanced tier completion of their chapter, not first-tier completion. Badge criteria (crown/lantern/seal/emblem) are unchanged.
+
+**State**
+- 169 tests passing (18 files).

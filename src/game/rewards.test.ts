@@ -119,12 +119,12 @@ describe("badge assignment (one shared rule engine, keyed by tier completion)", 
 
     const beginner = settle(store, "nicole", playInstrumentalistLevel("beginner"));
     expect(beginner.newRewardIds).toEqual(["badge-ch01-beginner-crown"]);
-    // First tier completion of the chapter also opens the harmonic unlock.
-    expect(beginner.newHarmonicUnlockIds).toEqual(["unlock-ch01-sustained-pad"]);
+    // Harmonic unlocks wait for Advanced mastery; earlier tiers open nothing.
+    expect(beginner.newHarmonicUnlockIds).toEqual([]);
 
     const intermediate = settle(store, "nicole", playInstrumentalistLevel("intermediate"));
     expect(intermediate.newRewardIds).toEqual(["badge-ch01-intermediate-lantern"]);
-    expect(intermediate.newHarmonicUnlockIds).toEqual([]); // already held
+    expect(intermediate.newHarmonicUnlockIds).toEqual([]);
 
     const advanced = settle(store, "nicole", playInstrumentalistLevel("advanced"));
     // Seal AND emblem: the third tier completes the full pilgrimage.
@@ -132,6 +132,8 @@ describe("badge assignment (one shared rule engine, keyed by tier completion)", 
       "badge-ch01-advanced-seal",
       "badge-ch01-pilgrimage-emblem",
     ]);
+    // Advanced completion is what opens the chapter's harmonic unlock.
+    expect(advanced.newHarmonicUnlockIds).toEqual(["unlock-ch01-sustained-pad"]);
 
     expect(store.earnedRewardIds("nicole").sort()).toEqual([
       "badge-ch01-advanced-seal",
