@@ -18,7 +18,13 @@
         "missing-note-twinkle-c"
       ],
       "rewardIds": [],
-      "sideQuestIds": ["ch01-echo-the-guide", "ch01-hold-the-lantern"],
+      "sideQuestIds": [
+        "ch01-echo-the-guide",
+        "ch01-hold-the-lantern",
+        "ch01-walking-beside-the-melody",
+        "ch01-finish-the-phrase",
+        "ch01-hidden-companion"
+      ],
       "audioCueIds": [],
       "harmonicUnlockIds": []
     }

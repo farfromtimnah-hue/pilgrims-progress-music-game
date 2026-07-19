@@ -65,11 +65,14 @@ describe("Chapter 1 content — instrumentalist", () => {
 });
 
 describe("Chapter 1 content — singer", () => {
-  it("materializes level 1's singer refs (interval, missing note, two side quests)", () => {
+  it("materializes level 1's singer refs (interval, missing note, five side quests)", () => {
     const p = plan("singer", "beginner", 0);
     expect(p.challenges.map((c) => c.kind)).toEqual([
       "interval",
       "missing_note",
+      "side_quest",
+      "side_quest",
+      "side_quest",
       "side_quest",
       "side_quest",
     ]);
@@ -82,9 +85,15 @@ describe("Chapter 1 content — singer", () => {
     expect(interval.question.songOptions.length).toBeGreaterThan(0);
   });
 
-  it("side quests are Echo the Guide and Hold the Lantern", () => {
+  it("side quests are the five wired into chapter 1's UI", () => {
     const p = plan("singer", "beginner", 0);
     const quests = p.challenges.slice(2).map((c) => (c.kind === "side_quest" ? c.quest.kind : null));
-    expect(quests).toEqual(["echo_the_guide", "hold_the_lantern"]);
+    expect(quests).toEqual([
+      "echo_the_guide",
+      "hold_the_lantern",
+      "walking_beside_the_melody",
+      "finish_the_phrase",
+      "hidden_companion",
+    ]);
   });
 });

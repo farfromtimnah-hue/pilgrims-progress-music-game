@@ -679,3 +679,96 @@ author chapter 2+ following this session's pattern:
 - 179 tests passing (20 files), typecheck clean, production Vite build
   succeeds, full app driven end-to-end in a real headless browser with
   zero console errors on both tracks.
+
+---
+
+## 2026-07-19 — Three more side quests wired to UI: Walking Beside the Melody, Finish the Phrase, Hidden Companion
+
+**What was built**
+- `src/app/screens/singer-side-quest.ts`: three new UI blocks following the
+  exact Echo the Guide / Hold the Lantern pattern established last session —
+  each renders real buttons for the quest's real options and dispatches real
+  events into the real reducer, no mocked completion.
+  - **Walking Beside the Melody**: three motion-name buttons (contrary/
+    oblique/similar), labels pulled from the reducer's own `MOTION_NAMES`
+    map (imported, not re-typed) so the UI text can never drift from what
+    the grader actually means by each name.
+  - **Finish the Phrase**: one button per offered pitch option (the real
+    `question.options`, including the derived correct resolution).
+  - **Hidden Companion**: for each candidate line, an "Audition line N"
+    button (dispatches `audition_line`, never completes the quest) plus a
+    "Choose line N" button (dispatches `choose_line`).
+  - All three needed no new architecture — `play_phrase`/`play_duet` audio
+    for these quests already routes through the existing
+    `routeEffectsToAudio` at the level-runner layer (built for Echo/Lantern
+    last session); this session's UI work was purely: render prompt/retry/
+    reveal text (already handled generically at the top of the function) and
+    wire buttons to real events.
+- `src/content/chapter-01.ts`: real Chapter 1 content for the three quests,
+  same C-major world as the existing Echo/Lantern content, each authored so
+  the real grading logic (not hand-picked answers) lands on the intended
+  correct answer:
+  - **Walking**: melody climbs C4-D4-E4-F4 while the companion descends
+    C4-B3-A3-G3 — four contrary steps, so `analyzeMotion`'s dominant motion
+    is genuinely "contrary" (verified directly against the real
+    `dominantMotion` helper before shipping, not asserted by inspection).
+  - **Finish the Phrase**: phrase G4-A4-B4 stops on B4 (scale degree 7,
+    "ti"), so `expectedResolution`'s classic tendency-tone rule (7→1) really
+    does derive C5 as the answer; options offered are C5 (correct) plus A4
+    and G4 decoys a step either side.
+  - **Hidden Companion**: melody E4-F4-G4-E4 with a real stepwise companion
+    line C4-D4-E4-C4 at `companionIndex: 1`, alongside a leaping decoy and a
+    static (repeated-note) decoy — chosen to be clearly distinguishable by
+    ear (leap vs. step vs. stillness), not near-misses.
+  - `materializeChapter01` and `data/chapters/chapter-01.json`'s
+    `sideQuestIds` extended so these three actually appear in the real
+    Chapter 1 level (was 2 side quests, now 5 — Choose the Better Path is
+    the sixth and remains out of scope for this session, handled
+    separately).
+
+**Decisions made that weren't explicit**
+- Content correctness (which motion is dominant, what the tendency tone
+  resolves to, which candidate is the real companion) was verified by
+  running the actual engine functions (`analyzeMotion`/`dominantMotion`,
+  `expectedResolution`) against the authored notes before committing them,
+  not just by eyeballing the music theory — the same discipline
+  `finish-the-phrase.ts`'s header comment calls for ("the expected
+  resolution comes from the classic tendency-tone rules, not
+  hand-authoring, so content stays honest").
+- `MOTION_NAMES` is imported directly from `walking-beside-the-melody.ts`
+  into the UI file rather than re-authored as parallel button-label strings
+  — one bilingual source for what each motion name means, following the
+  same avoid-string-duplication discipline as the rest of the UI (reusing
+  `noteDisplayName`, etc.).
+
+**How this was verified**
+- New `src/app/screens/singer-side-quest.newquests.test.ts` (happy-dom):
+  drives the REAL `startLevel`/`levelFlowReducer` orchestrator with each new
+  quest as the level's only challenge, renders with the real
+  `renderSideQuestChallenge`, clicks real DOM buttons, and asserts the real
+  reducer's `complete`/`retry` effects fire and `state.phase` actually
+  transitions — not a mocked pass-through. Covers: Walking's correct-pick
+  completion, Walking's wrong-pick retry-hint-then-complete path, Finish's
+  correct-resolution completion, and Hidden Companion's audition-doesn't-
+  complete / choose-does-complete distinction.
+- A manual real-browser (Playwright/Chromium) pass hit an unrelated
+  pre-existing UI quirk in Echo the Guide's note-picker (a single click
+  sometimes double-registers a pick in the DOM when driven immediately after
+  a screen transition) that made scripted end-to-end browser clicking
+  through the whole level unreliable; this is in code untouched this
+  session (Echo the Guide's picker, singer-missing-note.ts's transition),
+  not in anything built here, and is flagged below rather than chased down,
+  since the happy-dom tests above already exercise the real reducer/UI
+  wiring this session was scoped to build.
+- Full test suite + typecheck run clean (see State below).
+
+**Open questions for Nicole**
+- The Echo the Guide double-click quirk noticed during manual browser
+  testing (see above) should get a real investigation in a UI-focused
+  session — it didn't block this session's scope but is worth a look before
+  the picker ships to real students on real devices.
+- Choose the Better Path (the sixth and last side quest) is still unwired —
+  a separate concurrent session's scope, not touched here.
+
+**State**
+- 183 tests passing (21 files; 179 prior + 4 new), typecheck clean.

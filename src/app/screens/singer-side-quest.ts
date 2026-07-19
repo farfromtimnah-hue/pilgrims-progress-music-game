@@ -17,6 +17,8 @@ import type { SideQuestSpec } from "../../game/challenges.js";
 import type { AppContext } from "../context.js";
 import { box, button, paragraph } from "../dom.js";
 import { noteDisplayName } from "./shared.js";
+import { MOTION_NAMES } from "../../tracks/singer/side-quests/walking-beside-the-melody.js";
+import type { MotionKind } from "../../tracks/singer/harmony/motion.js";
 
 function uniqueNotesFromPhrase(notes: PlacedNote[]): PlacedNote[] {
   const seen = new Set<string>();
@@ -106,6 +108,79 @@ export function renderSideQuestChallenge(
         ),
       );
     }
+    return container;
+  }
+
+  if (spec.kind === "walking_beside_the_melody") {
+    const state = runtime.quest as { phase: string };
+    if (state.phase === "complete") {
+      container.appendChild(paragraph(ctx.language === "en" ? "Quest complete." : "Desafio concluído."));
+      return container;
+    }
+    container.appendChild(
+      paragraph(
+        ctx.language === "en"
+          ? "How do the two voices move against each other?"
+          : "Como as duas vozes se movem uma em relação à outra?",
+      ),
+    );
+    const motions: MotionKind[] = ["contrary", "oblique", "similar"];
+    for (const motion of motions) {
+      container.appendChild(
+        button(display(MOTION_NAMES[motion], ctx.language), () =>
+          dispatch({ type: "side_quest_event", event: { type: "choose_motion", motion } }),
+        ),
+      );
+    }
+    return container;
+  }
+
+  if (spec.kind === "finish_the_phrase") {
+    const state = runtime.quest as { phase: string };
+    if (state.phase === "complete") {
+      container.appendChild(paragraph(ctx.language === "en" ? "Quest complete." : "Desafio concluído."));
+      return container;
+    }
+    container.appendChild(
+      paragraph(ctx.language === "en" ? "Where does the phrase want to resolve?" : "Para onde a frase quer se resolver?"),
+    );
+    for (const option of spec.question.options) {
+      container.appendChild(
+        button(noteDisplayName(option.note, ctx.language), () =>
+          dispatch({ type: "side_quest_event", event: { type: "choose_pitch", choice: option } }),
+        ),
+      );
+    }
+    return container;
+  }
+
+  if (spec.kind === "hidden_companion") {
+    const state = runtime.quest as { phase: string };
+    if (state.phase === "complete") {
+      container.appendChild(paragraph(ctx.language === "en" ? "Quest complete." : "Desafio concluído."));
+      return container;
+    }
+    container.appendChild(
+      paragraph(
+        ctx.language === "en"
+          ? "Which line is the hidden companion? You may audition a line before choosing."
+          : "Qual linha é o companheiro oculto? Você pode ouvir uma linha antes de escolher.",
+      ),
+    );
+    spec.question.options.forEach((_, index) => {
+      const row = document.createElement("div");
+      row.appendChild(
+        button(ctx.language === "en" ? `Audition line ${index + 1}` : `Ouvir linha ${index + 1}`, () =>
+          dispatch({ type: "side_quest_event", event: { type: "audition_line", index } }),
+        ),
+      );
+      row.appendChild(
+        button(ctx.language === "en" ? `Choose line ${index + 1}` : `Escolher linha ${index + 1}`, () =>
+          dispatch({ type: "side_quest_event", event: { type: "choose_line", index } }),
+        ),
+      );
+      container.appendChild(row);
+    });
     return container;
   }
 

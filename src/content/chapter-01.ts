@@ -23,6 +23,9 @@ import { referencesFor } from "../tracks/singer/intervals/song-references.js";
 import type { IntervalQuestion } from "../tracks/singer/intervals/interval-quiz.js";
 import type { EchoQuestion } from "../tracks/singer/side-quests/echo-the-guide.js";
 import type { LanternQuestion } from "../tracks/singer/side-quests/hold-the-lantern.js";
+import type { WalkingQuestion } from "../tracks/singer/side-quests/walking-beside-the-melody.js";
+import type { FinishQuestion } from "../tracks/singer/side-quests/finish-the-phrase.js";
+import type { HiddenCompanionQuestion } from "../tracks/singer/side-quests/hidden-companion.js";
 import type { MelodyNote } from "../tracks/singer/missing-note/melodies.js";
 
 // ---------------------------------------------------------------------------
@@ -113,6 +116,96 @@ export const CH01_LANTERN_QUESTION: LanternQuestion = {
 };
 
 // ---------------------------------------------------------------------------
+// Singer side quests continued: Walking Beside the Melody, Finish the
+// Phrase, Hidden Companion — the same short C-major world as Echo/Lantern
+// above, each authored so the reducer's real grading (analyzeMotion,
+// expectedResolution's tendency-tone rules, the companion index) lands on
+// the intended answer rather than an accidental one.
+// ---------------------------------------------------------------------------
+
+// Melody climbs C-D-E-F while the companion descends C-B-A-G underneath —
+// four contrary steps, so analyzeMotion's dominant motion is "contrary".
+const CH01_WALKING_MELODY: MelodyNote[] = [
+  { note: spelled("C"), octave: 4, beats: 1 },
+  { note: spelled("D"), octave: 4, beats: 1 },
+  { note: spelled("E"), octave: 4, beats: 1 },
+  { note: spelled("F"), octave: 4, beats: 1 },
+];
+
+const CH01_WALKING_COMPANION: MelodyNote[] = [
+  { note: spelled("C"), octave: 4, beats: 1 },
+  { note: spelled("B"), octave: 3, beats: 1 },
+  { note: spelled("A"), octave: 3, beats: 1 },
+  { note: spelled("G"), octave: 3, beats: 1 },
+];
+
+export const CH01_WALKING_QUESTION: WalkingQuestion = {
+  id: "ch01-walking-beside-the-melody",
+  melody: CH01_WALKING_MELODY,
+  companion: CH01_WALKING_COMPANION,
+};
+
+// Phrase climbs to B4 (scale degree 7, "ti") and stops — a classic
+// tendency tone that pulls up to C5 ("do"). expectedResolution derives that
+// answer from the C-major scale; the offered options are the resolution
+// plus two decoys a step either side.
+const CH01_FINISH_PHRASE: MelodyNote[] = [
+  { note: spelled("G"), octave: 4, beats: 1 },
+  { note: spelled("A"), octave: 4, beats: 1 },
+  { note: spelled("B"), octave: 4, beats: 2 },
+];
+
+export const CH01_FINISH_QUESTION: FinishQuestion = {
+  id: "ch01-finish-the-phrase",
+  keyId: "C-major",
+  phrase: CH01_FINISH_PHRASE,
+  options: [
+    { note: spelled("A"), octave: 4 },
+    { note: spelled("C"), octave: 5 },
+    { note: spelled("G"), octave: 4 },
+  ],
+};
+
+// A duet where the companion walks a steady stepwise line under the
+// melody; two decoy candidates (a leaping line, and the melody's own
+// rhythm shifted) sit alongside the real companion at companionIndex 1.
+const CH01_COMPANION_MELODY: MelodyNote[] = [
+  { note: spelled("E"), octave: 4, beats: 1 },
+  { note: spelled("F"), octave: 4, beats: 1 },
+  { note: spelled("G"), octave: 4, beats: 1 },
+  { note: spelled("E"), octave: 4, beats: 1 },
+];
+
+const CH01_COMPANION_LINE: MelodyNote[] = [
+  { note: spelled("C"), octave: 4, beats: 1 },
+  { note: spelled("D"), octave: 4, beats: 1 },
+  { note: spelled("E"), octave: 4, beats: 1 },
+  { note: spelled("C"), octave: 4, beats: 1 },
+];
+
+const CH01_COMPANION_DECOY_LEAP: MelodyNote[] = [
+  { note: spelled("C"), octave: 3, beats: 1 },
+  { note: spelled("G"), octave: 3, beats: 1 },
+  { note: spelled("C"), octave: 4, beats: 1 },
+  { note: spelled("G"), octave: 3, beats: 1 },
+];
+
+const CH01_COMPANION_DECOY_STATIC: MelodyNote[] = [
+  { note: spelled("G"), octave: 3, beats: 1 },
+  { note: spelled("G"), octave: 3, beats: 1 },
+  { note: spelled("G"), octave: 3, beats: 1 },
+  { note: spelled("G"), octave: 3, beats: 1 },
+];
+
+export const CH01_HIDDEN_COMPANION_QUESTION: HiddenCompanionQuestion = {
+  id: "ch01-hidden-companion",
+  melody: CH01_COMPANION_MELODY,
+  companion: CH01_COMPANION_LINE,
+  options: [CH01_COMPANION_DECOY_LEAP, CH01_COMPANION_LINE, CH01_COMPANION_DECOY_STATIC],
+  companionIndex: 1,
+};
+
+// ---------------------------------------------------------------------------
 // Materializer — the chapter-specific bridge from content refs to Challenge
 // instances. Instrumentalist refs still resolve through the generic JSON
 // materializer (real quiz-template data); singer refs resolve to the
@@ -162,6 +255,27 @@ export function materializeChapter01(
         id: ref.id,
         contextKeyId: "C-major",
         quest: { kind: "hold_the_lantern", question: CH01_LANTERN_QUESTION },
+      };
+    case "ch01-walking-beside-the-melody":
+      return {
+        kind: "side_quest",
+        id: ref.id,
+        contextKeyId: "C-major",
+        quest: { kind: "walking_beside_the_melody", question: CH01_WALKING_QUESTION },
+      };
+    case "ch01-finish-the-phrase":
+      return {
+        kind: "side_quest",
+        id: ref.id,
+        contextKeyId: "C-major",
+        quest: { kind: "finish_the_phrase", question: CH01_FINISH_QUESTION },
+      };
+    case "ch01-hidden-companion":
+      return {
+        kind: "side_quest",
+        id: ref.id,
+        contextKeyId: "C-major",
+        quest: { kind: "hidden_companion", question: CH01_HIDDEN_COMPANION_QUESTION },
       };
     default:
       return null;
