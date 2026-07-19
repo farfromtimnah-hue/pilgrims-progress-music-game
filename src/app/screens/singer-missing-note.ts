@@ -1,8 +1,11 @@
 /**
  * Missing-note melodic completion UI: the phrase already played full, then
  * gapped (level-runner routed those effects to audio before this rendered).
- * Three pitch options; picking one triggers the "with your choice" replay
- * and, if wrong, the correct-phrase replay, then the labeled result.
+ * A Replay button re-fires the full-then-gapped phrase on demand. Each of
+ * the three pitch options has a Preview button (plays that pitch filling
+ * the gap, in musical context, without submitting) and a Choose button
+ * (commits the answer) — picking one triggers the "with your choice"
+ * replay and, if wrong, the correct-phrase replay, then the labeled result.
  */
 import { display } from "../../engine/i18n/localized-text.js";
 import type { ChallengeRuntime, LevelEffect, LevelEvent } from "../../game/level-flow.js";
@@ -33,6 +36,13 @@ export function renderMissingNoteChallenge(
         : "Qual nota preenche o espaço? Escute e escolha.",
     ),
   );
+  if (runtime.quiz.phase === "choosing") {
+    container.appendChild(
+      button(ctx.language === "en" ? "🔁 Replay phrase" : "🔁 Repetir a frase", () =>
+        dispatch({ type: "missing_note_event", event: { type: "replay_phrase" } }),
+      ),
+    );
+  }
   return container;
 }
 
@@ -45,11 +55,19 @@ export function renderMissingNoteOptions(
   const row = document.createElement("div");
   if (runtime.quiz.phase !== "choosing") return row;
   for (const option of challenge.question.options) {
-    row.appendChild(
+    const optionRow = document.createElement("div");
+    optionRow.appendChild(
+      button(
+        ctx.language === "en" ? `🔊 Preview ${noteDisplayName(option.note, ctx.language)}` : `🔊 Ouvir ${noteDisplayName(option.note, ctx.language)}`,
+        () => dispatch({ type: "missing_note_event", event: { type: "preview_option", choice: option } }),
+      ),
+    );
+    optionRow.appendChild(
       button(noteDisplayName(option.note, ctx.language), () =>
         dispatch({ type: "missing_note_event", event: { type: "choose_pitch", choice: option } }),
       ),
     );
+    row.appendChild(optionRow);
   }
   return row;
 }

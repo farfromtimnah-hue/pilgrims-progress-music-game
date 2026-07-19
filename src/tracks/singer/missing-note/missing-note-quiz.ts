@@ -175,7 +175,10 @@ export interface MissingNoteState {
   phase: MissingNotePhase;
 }
 
-export type MissingNoteEvent = { type: "choose_pitch"; choice: PlacedNote };
+export type MissingNoteEvent =
+  | { type: "choose_pitch"; choice: PlacedNote }
+  | { type: "replay_phrase" }
+  | { type: "preview_option"; choice: PlacedNote };
 
 export type MissingNoteEffect =
   | { type: "play_phrase"; which: "full" | "gapped" | "with_choice" | "correct"; phrase: PhraseNote[] }
@@ -203,7 +206,30 @@ export function missingNoteReducer(
   event: MissingNoteEvent,
   question: MissingNoteQuestion,
 ): MissingNoteTransition {
-  if (state.phase !== "choosing" || event.type !== "choose_pitch") return { state, effects: [] };
+  if (state.phase !== "choosing") return { state, effects: [] };
+
+  if (event.type === "replay_phrase") {
+    return {
+      state,
+      effects: [
+        { type: "play_phrase", which: "full", phrase: fullPhrase(question.melody) },
+        { type: "play_phrase", which: "gapped", phrase: gappedPhrase(question.melody, question.gapIndex) },
+      ],
+    };
+  }
+
+  if (event.type === "preview_option") {
+    return {
+      state,
+      effects: [
+        {
+          type: "play_phrase",
+          which: "with_choice",
+          phrase: phraseWithChoice(question.melody, question.gapIndex, event.choice),
+        },
+      ],
+    };
+  }
 
   const gap = question.melody.notes[question.gapIndex]!;
   // Singers are graded on the sounding pitch they chose, octave included.

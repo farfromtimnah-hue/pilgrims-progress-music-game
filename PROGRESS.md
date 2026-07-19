@@ -902,3 +902,67 @@ this content surfaced a case against them.
   companion A" through the real orchestrator emits exactly one
   `play_duet` effect, doesn't complete the quest, phase stays "running".
 - Full suite: **188 tests passing (21 files)**, typecheck clean.
+
+---
+
+## 2026-07-19 — Missing-note quiz: replay + per-option preview audio
+
+**What was built**
+- Bug fix, confirmed by Nicole playing the real app: the missing-note
+  melodic completion quiz (`singer-missing-note.ts`) had no audio replay
+  and no per-option preview at all — the full-then-gapped phrase played
+  once automatically at question start, and the three pitch-option
+  buttons were plain text labels (e.g. "D4") with no way to hear a note
+  before choosing. This violated the project's own core rule ("ear hears
+  the note before the game explains the result"): guessing a pitch
+  name from unlabeled buttons with no replay requires perfect pitch,
+  which isn't the mechanic this quiz is built to teach.
+- Added two new `MissingNoteEvent` variants to `missing-note-quiz.ts`,
+  following the exact prior-art pattern already established by Choose the
+  Better Path's `replay_duet` and Hidden Companion's `audition_line`:
+  `replay_phrase` (re-emits the same full-then-gapped `play_phrase`
+  effects `startMissingNoteQuiz` fires initially) and `preview_option`
+  (emits a `with_choice` `play_phrase` effect — the option filling the
+  gap in the full phrase, i.e. reuses `phraseWithChoice`, so a preview is
+  never a bare isolated note). Both leave `state` untouched (no phase
+  change, no `complete` effect), so neither counts as an attempt or
+  advances the quiz.
+- `singer-missing-note.ts`: a "🔁 Replay phrase" button in
+  `renderMissingNoteChallenge`, and each pitch option in
+  `renderMissingNoteOptions` now renders as a pair — "🔊 Preview {note}"
+  (dispatches `preview_option`, does not submit) next to the existing
+  note-name button (dispatches `choose_pitch`, commits the answer) — the
+  same two-buttons-per-option shape as Hidden Companion's audition/choose
+  pair. Bilingual EN/PT throughout.
+- No changes needed to `level-flow.ts` or `audio-router.ts`: the
+  `missing_note` reducer branch already forwards any effects without a
+  `complete` payload without altering `quiz` state, and the audio router
+  already dispatches every `play_phrase` effect on the `missing_note`
+  channel to `AudioEngine.playPhrase` regardless of `which` — both new
+  events flow through the exact same audio path as the original
+  full/gapped/with_choice/correct effects.
+
+**How this was verified**
+- New `singer-missing-note.replay.test.ts` (happy-dom, same harness as
+  `singer-side-quest.newquests.test.ts`): Replay button re-fires
+  `["full", "gapped"]` `play_phrase` effects without completing; Preview
+  button on an option emits exactly one `with_choice` `play_phrase`
+  effect without a `show_result` or `complete` effect; choosing the
+  correct option through the (unchanged) choose button still submits and
+  completes correctly.
+- Full suite: **191 tests passing (22 files)**, typecheck clean.
+
+**Flagged, not fixed — same gap likely exists elsewhere**
+This session's fix was scoped to missing-note only. The same
+plain-text-button-with-no-preview shape appears to exist in at least two
+other places and needs its own sweep:
+- The instrumentalist note-token screen (`instrumentalist-note-token.ts`)
+  — token buttons are visual/text only; unclear whether it needs audio
+  preview the same way (instrumentalist may be reading notation rather
+  than identifying by ear, which would make this a non-issue there — needs
+  a look before assuming it's the same bug).
+- Finish the Phrase's pitch-option buttons in `singer-side-quest.ts` look
+  like the same shape as missing-note's did (plain note-name buttons, no
+  preview/replay).
+Do not assume these are bugs without checking each mechanic's actual
+pedagogical intent first — but both are worth a dedicated look next.
