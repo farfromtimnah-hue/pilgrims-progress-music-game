@@ -14,11 +14,11 @@
       "id": "singer",
       "name": { "en": "Singer", "pt": "Cantor" },
       "description": {
-        "en": "Singer track — learning logic to be defined in a later session.",
-        "pt": "Trilha do cantor — a lógica de aprendizagem será definida em uma sessão futura."
+        "en": "Hearing first: interval recognition by song reference, melodic completion by ear, and counterpoint side quests.",
+        "pt": "Primeiro o ouvido: reconhecimento de intervalos por referência de música, complementação melódica de ouvido, e desafios de contraponto."
       },
       "learningSequence": [],
-      "enabled": false
+      "enabled": true
     }
   ]
 }

@@ -85,11 +85,10 @@ function levelResult(effects: LevelEffect[]): LevelResult {
 describe("instrumentalist level end-to-end (real chapter data, real grading, real strike machine)", () => {
   function instrumentalistPlan(tierId: "beginner" | "intermediate" | "advanced"): LevelPlan {
     const level: Level = chapter01.levels[0]!;
-    const challenges = buildChallengeSequence(level, (ref) =>
-      ref.source === "quiz_template"
-        ? materializeInstrumentalistTemplate(templates[ref.id]!, "instrumentalist", tierId)
-        : null,
-    );
+    const challenges = buildChallengeSequence(level, (ref) => {
+      const template = ref.source === "quiz_template" ? templates[ref.id] : undefined;
+      return template ? materializeInstrumentalistTemplate(template, "instrumentalist", tierId) : null;
+    });
     return {
       chapterId: chapter01.id,
       levelId: level.id,

@@ -449,3 +449,233 @@ None of these can make the engine call a genuinely ambiguous pair — that case 
 
 **State**
 - 169 tests passing (18 files).
+
+---
+
+## 2026-07-18 — Placeholder UI, first playable build (all screens + Chapter 1 content)
+
+This is the first session with an actual UI. Per the session brief, it is
+deliberately visually bare (unstyled boxes, labels, basic layout) — every
+screen is logically complete and backed by real engine/game-loop calls, with
+zero mocked data or fake progress state. Verified by driving the real app in
+a real (headless) browser end-to-end, not just unit tests — see "How this
+was verified" below.
+
+**What was built**
+
+*UI tooling*
+- Added Vite (`vite.config.ts`, `index.html`, `npm run dev` / `app:build` /
+  `app:preview`) on top of the existing plain-TypeScript project, exactly as
+  piece 1's PROGRESS.md note predicted ("a UI session can add Vite on top
+  without restructuring"). No React/framework — the UI follows the house
+  style already set by `language-select-screen.ts`: plain `document.createElement`
+  calls, no CSS.
+- `data-public/data` is a symlink to the repo-root `/data` directory so the
+  existing `fetch`-based `loadJson` loader (untouched) works unchanged in
+  dev and production builds — content JSON is served, not bundled, so
+  editing a data file doesn't require a rebuild.
+- `src/app/` is a new top-level layer (alongside `engine`, `game`, `tracks`)
+  containing only UI: DOM helpers (`dom.ts`), the app context threading the
+  real engine singletons (`context.ts` — one `AudioEngine`, one
+  `ProgressStore`, the chosen language), data loading (`data.ts`), and one
+  screen module per concern under `src/app/screens/`.
+
+*Screens (`src/app/screens/`)*
+- `track-select.ts` — lists tracks from data, disables any with
+  `enabled: false` (none are, now — see below).
+- `chapter-map.ts` — one shared map for both tracks (never forked), all 8
+  chapters, tier badges read live via `chapterCompleteAtTier` (the same
+  function `rewards.ts` uses) against real `ProgressStore` records — no
+  hardcoded completion state anywhere.
+- `level-runner.ts` — the one screen that plays any level: drives
+  `startLevel` / `levelFlowReducer` directly, routes every effect through
+  `routeEffectsToAudio` before rendering any grading feedback (audio-then-
+  judge order preserved), and dispatches to per-challenge-kind renderers.
+  On `level_complete` it calls the real `settleLevelResult` and shows
+  whatever badges/unlocks were actually granted.
+- `instrumentalist-note-token.ts` — real token buttons (see token-set.ts
+  below), each press submits `answer_note` and is graded by the real
+  `judgeAnswer`; strike-machine diagnostic/scaffold pauses render their own
+  follow-up UI and disable the token buttons while paused.
+- `instrumentalist-quiz.ts` — the full-set key-signature quiz as a
+  checkbox grid over all 21 candidate spellings (7 letters × {♭, ♮, ♯}) —
+  select-all, not four-option multiple choice, per the non-negotiable — plus
+  all four recovery steps (circle side → count → select set → order) in
+  their required order, each driven by the real `recoveryReducer`.
+- `singer-interval.ts` — song-hint and name-choice buttons built from the
+  challenge's real `songOptions`/`nameOptions` content, not hardcoded lists.
+- `singer-missing-note.ts` — the three real pitch options from
+  `buildMissingNoteQuestion`, labeled result on completion.
+- `singer-side-quest.ts` — **Echo the Guide** and **Hold the Lantern**
+  wired fully (see below); the other four quest kinds render an honest
+  "not wired into the UI yet" message rather than a fake pass-through.
+- `badges.ts` — reads `ProgressStore.earnedRewardIds` and harmonic-unlock
+  ids straight from persisted records, matched against real `Reward` /
+  `HarmonicUnlock` data for display text and badge glyph.
+
+*Instrumentalist note-token content generation*
+- New `src/tracks/instrumentalist/note-token/token-set.ts`
+  (`buildNoteTokenSet`) — the piece-1 level-flow PROGRESS.md note flagged
+  actual token-set generation as unbuilt ("content-authoring work for a
+  future session and slots into the materializer"); this is that work.
+  Deterministic (seeded PRNG) so a level's displayed tokens are stable
+  within a session, roughly half in-key / half out-of-key, correctness
+  verified against the real `gradeNoteToken`. 5 new tests.
+
+*Chapter 1 real content authoring (`src/content/chapter-01.ts`)*
+- Chapter 1 got its real title ("City of Destruction" / "Cidade da
+  Destruição") replacing the piece-1 placeholder, and its `keyIds` fixed
+  from the never-consumed placeholder `["C", "G", "F"]` to the real,
+  resolvable id `["C-major"]` (the chapter's one focus key, per the
+  session brief — "at least one key").
+- **Instrumentalist**: existing `note-token-basic` / `key-signature-full-set`
+  templates now render for real via `token-set.ts` + the existing quiz
+  modules — no new data schema needed, this piece was UI + token
+  generation.
+- **Singer**: authored directly in code (`chapter-01.ts`), following the
+  exact pattern the level-flow integration tests already established
+  (content data in `song-references.ts` / `melodies.ts`, per-chapter
+  question objects built in a chapter module — singer content is not
+  generic JSON-templated the way instrumentalist content is, by design of
+  the existing materializer):
+  - Up/down hearing: ascending M2 (Happy Birthday) and descending m2
+    (Für Elise), Beginner reveals the formal name after the song step.
+  - A P5-up reference question (Twinkle Twinkle) as the chapter's second
+    interval-reference content, Intermediate+ asks for the name.
+  - Missing-note completion on Twinkle Twinkle (already-authored public-domain
+    melody), gap at note index 2 (the leap from C up to G).
+  - **Echo the Guide** and **Hold the Lantern** — the first two of the six
+    side quests — wired fully end-to-end with real Chapter 1 phrases in C
+    major, as the pattern the remaining four (Choose the Better Path,
+    Walking Beside the Melody, Finish the Phrase, Hidden Companion) will
+    follow in a later content session. Neither quest has real microphone
+    pitch-detection input available yet (out of scope, per
+    `hold-the-lantern.ts`'s own header comment), so their UI substitutes an
+    honest "press the note you'd sing" button flow over the same
+    real reducers — no mocked completion, every press is a genuine event.
+  - All Chapter 1 refs materialize through one `materializeChapter01`
+    function: instrumentalist refs still resolve via the generic
+    `materializeInstrumentalistTemplate`; singer refs resolve to the
+    content above. This is the proof pattern for chapters 2–8: a future
+    session repeats this file's shape.
+  - Chapter 1's single level now carries both tracks' content refs in one
+    `Level` (`quizTemplateIds` + `sideQuestIds`), not two levels — the
+    materializer already skips refs that resolve to `null` for the current
+    track, so one shared level structure serves both tracks without
+    forking anything. (This replaced an earlier two-level draft that broke
+    the existing chapter-completion tests, which assume one level per
+    chapter for chapter 1 — see "Judgment calls" below.)
+- `data/tracks.json`: Singer flipped from `enabled: false` to `true` now
+  that it has real Chapter 1 content and a working UI.
+- `data/chapters/chapter-02.json` … `chapter-08.json` — new placeholder
+  chapters (id, real narrative title, `order`, empty `levels: []`) so the
+  map screen can render the full 8-chapter road (City of Destruction →
+  Evangelist's Road → Slough of Despond → Wicket-Gate → Interpreter's
+  House → Hill Difficulty → Palace Beautiful → Final Road) with chapters
+  2–8 correctly showing "Not yet authored" and no playable tier buttons.
+  **Caution for whoever authors chapter 2+:** an empty `levels: []` reads
+  as vacuously "complete at every tier" by `hasCompletedLevels`/
+  `chapterCompleteAtTier` (`.every()` over zero levels is `true`) — this is
+  harmless today because the UI never offers tier buttons for an empty
+  chapter, but the first content session for chapter 2 should add at least
+  one real level before anything could touch its badge logic.
+
+*Reward/progress UI*
+- Fully wired to `src/game/rewards.ts` and `ProgressStore` — verified live
+  (see below) that completing a level grants exactly the real
+  `evaluateChapterGrants` output (Chapter 1 Crown on Beginner completion,
+  on both tracks, since badges are track-agnostic by design) and persists
+  it to `localStorage` such that the chapter map and badges screen
+  reflect it after a page-level navigation.
+
+**betterOverride — not built, and here's the actual disagreement check**
+The standing rule was: build `betterOverride` only if authoring real
+content surfaces a disagreement with `naturalness.ts`'s verdict. This
+session's singer content used **Echo the Guide** and **Hold the Lantern**
+only (per the "wire the first two side quests" scope) — neither calls
+`judgeHarmonyLines` / `buildBetterPathQuestion`, so no naturalness
+judgment was exercised against new content this session, and no
+disagreement could have surfaced. `betterOverride` stays unbuilt. The next
+session that authors **Choose the Better Path** content for Chapter 1 (or
+later chapters) is the one that will actually hit this decision point.
+
+**How this was verified**
+Beyond the unit/integration test suite, the actual app was driven in a
+real headless Chromium browser (Playwright, installed for this session)
+against the Vite dev server for both the golden path and real engine
+edge cases:
+- Language gate → track select → chapter map → full instrumentalist level
+  (note-token + key-signature-full-set) → level-complete screen showing
+  the real "Chapter 1 Crown" grant → chapter map showing the crown glyph
+  persisted → badges screen listing it. Zero console errors throughout.
+- Full singer level: interval (song-hint, reveal mode) → missing-note →
+  Echo the Guide → Hold the Lantern → level-complete, same Crown badge
+  granted on the singer track (proving badges are genuinely track-agnostic
+  end-to-end, not just in the pure rule-engine tests). Zero console errors.
+- An early test run accidentally exercised a real *wrong* answer path
+  (a mis-targeted click) and correctly triggered the strike machine's
+  diagnostic pause, disabling the note-token buttons until the diagnostic
+  was answered — confirming the UI's disabled-state handling isn't
+  cosmetic, it's driven by real `StrikeState.phase`.
+- `npx vite build` (production bundle) succeeds: 1009 modules, no errors.
+
+**Judgment calls made that weren't explicit**
+- Chapter 1's content lives in one `Level` with both tracks' refs mixed
+  together (materializer skips what doesn't apply), not one level per
+  track — chosen because the non-negotiable says "both tracks share one
+  world/map," and the existing `chapterCompleteAtTier` badge logic keys on
+  *every level of the chapter*, so splitting into two levels would have
+  required either duplicating levels per track (badges checking the wrong
+  track's level) or changing the badge rule engine — out of scope this
+  session. This was actually discovered by breaking existing tests
+  (`rewards.test.ts`) with an initial two-level draft, then fixing forward.
+- The four side quests not wired to real UI this session render an honest
+  in-app message rather than being silently omitted from `singer-side-quest.ts`
+  — so if content authoring adds them to a chapter's `sideQuestIds` before
+  their UI is built, the failure mode is visible in-app, not silent.
+- Echo the Guide / Hold the Lantern UI substitutes tap-the-note-you-sang
+  buttons for real microphone pitch input, since pitch detection is out of
+  scope (flagged as a future UI concern back in the Singer piece 3 entry).
+  Every tap is still a real `submit_echo` / `checkpoint` event into the
+  real reducer — nothing about quest completion is faked, only the input
+  method is a placeholder.
+- Player identity: a random UUID is minted once into `localStorage`
+  (`ppmg.playerId`) on first launch — there is no login/profile UI yet, so
+  "the player" is just whoever has this browser/device, matching the
+  progress-store piece's own open question ("one shared device profile per
+  player id fine for now").
+
+**Open questions for Nicole**
+- Profile switching UI (multiple players on one device) is still
+  unaddressed — flagged back in the progress-tracking piece, still true.
+- The four side quests without real UI (Choose the Better Path, Walking
+  Beside the Melody, Finish the Phrase, Hidden Companion) need their own
+  UI pass; Choose the Better Path is also the one most likely to finally
+  trigger the `betterOverride` decision once its content is authored.
+- Microphone pitch-detection input for Echo the Guide / Hold the Lantern
+  is still unbuilt; today's tap-the-note substitute is a reasonable
+  placeholder but not what ships.
+
+**What's left for chapters 2–8**
+Chapters 2–8 exist in data as placeholders only (title + order, zero
+levels) — no content, no keys, no quiz templates, no side quests. To
+author chapter 2+ following this session's pattern:
+1. Pick the chapter's focus key(s) and add a `Level` with real
+   `quizTemplateIds` (instrumentalist — reuse or add quiz-template JSON)
+   and singer content (extend a `src/content/chapter-0N.ts` module
+   following `chapter-01.ts`'s shape) to the chapter's data file.
+2. Add matching reward/harmonic-unlock JSON files
+   (`data/rewards/chapter-0N-rewards.json`, etc.) with the four badge
+   criteria (crown/lantern-scroll/seal/emblem) — copy chapter 1's shape.
+3. If singer content for that chapter uses Choose the Better Path,
+   run `judgeHarmonyLines` on the candidate lines during authoring — if it
+   throws (too close to call) or its verdict disagrees with your own
+   judgment, that's the trigger to finally build `betterOverride`.
+4. No UI changes should be needed — every screen already reads chapters,
+   templates, rewards, and unlocks from data/content modules, not
+   hardcoded per-chapter code.
+
+**State**
+- 179 tests passing (20 files), typecheck clean, production Vite build
+  succeeds, full app driven end-to-end in a real headless browser with
+  zero console errors on both tracks.

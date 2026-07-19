@@ -73,11 +73,10 @@ function playInstrumentalistLevel(tierId: DifficultyTierId): LevelResult {
     trackId: "instrumentalist",
     tier: tier(tierId),
     testsNotationPrecision: chapter01.testsNotationPrecision,
-    challenges: buildChallengeSequence(level, (ref) =>
-      ref.source === "quiz_template"
-        ? materializeInstrumentalistTemplate(templates[ref.id]!, "instrumentalist", tierId)
-        : null,
-    ),
+    challenges: buildChallengeSequence(level, (ref) => {
+      const template = ref.source === "quiz_template" ? templates[ref.id] : undefined;
+      return template ? materializeInstrumentalistTemplate(template, "instrumentalist", tierId) : null;
+    }),
   };
   // Enough correct C-major picks for every tier's requiredCorrect (max 5 at
   // advanced), then the correct (empty) C-major signature set.
