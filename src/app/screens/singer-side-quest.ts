@@ -1,9 +1,8 @@
 /**
- * Side-quest UI: Echo the Guide and Hold the Lantern, wired end-to-end this
- * session as the pattern the remaining four quests (Choose the Better Path,
- * Walking Beside the Melody, Finish the Phrase, Hidden Companion) will
- * follow in a later session. Both real quests need pitch input from the
- * singer; without microphone pitch-detection in scope yet (per
+ * Side-quest UI: all six singer side quests, wired end-to-end following the
+ * pattern Echo the Guide and Hold the Lantern established. Echo and Lantern
+ * need pitch input from the singer; without microphone pitch-detection in
+ * scope yet (per
  * hold-the-lantern.ts's header comment — "the caller's pitch detection
  * reports checkpoints"), this renders an honest press-the-note-you-sang
  * substitute using the same note-button pattern as the rest of the UI, so
@@ -148,6 +147,30 @@ export function renderSideQuestChallenge(
       container.appendChild(
         button(noteDisplayName(option.note, ctx.language), () =>
           dispatch({ type: "side_quest_event", event: { type: "choose_pitch", choice: option } }),
+        ),
+      );
+    }
+    return container;
+  }
+
+  if (spec.kind === "choose_the_better_path") {
+    const state = runtime.quest as { phase: string };
+    if (state.phase === "complete") {
+      container.appendChild(paragraph(ctx.language === "en" ? "Quest complete." : "Desafio concluído."));
+      return container;
+    }
+    container.appendChild(
+      paragraph(
+        ctx.language === "en"
+          ? "You heard the melody with companion A, then with companion B."
+          : "Você ouviu a melodia com o companheiro A, depois com o companheiro B.",
+      ),
+    );
+    for (const pick of ["a", "b"] as const) {
+      container.appendChild(
+        button(
+          ctx.language === "en" ? `Choose companion ${pick.toUpperCase()}` : `Escolher companheiro ${pick.toUpperCase()}`,
+          () => dispatch({ type: "side_quest_event", event: { type: "choose_path", pick } }),
         ),
       );
     }

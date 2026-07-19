@@ -15,6 +15,7 @@ import { spelled } from "../engine/theory/pitch.js";
 import type { Chapter, DifficultyTier, QuizTemplate } from "../engine/types/schema.js";
 import { buildChallengeSequence } from "../game/challenges.js";
 import { levelFlowReducer, startLevel, type LevelEvent, type LevelPlan } from "../game/level-flow.js";
+import { judgeHarmonyLines } from "../tracks/singer/harmony/naturalness.js";
 import { materializeChapter01 } from "./chapter-01.js";
 
 const chapter01 = chapter01Json as unknown as Chapter;
@@ -65,11 +66,12 @@ describe("Chapter 1 content — instrumentalist", () => {
 });
 
 describe("Chapter 1 content — singer", () => {
-  it("materializes level 1's singer refs (interval, missing note, five side quests)", () => {
+  it("materializes level 1's singer refs (interval, missing note, six side quests)", () => {
     const p = plan("singer", "beginner", 0);
     expect(p.challenges.map((c) => c.kind)).toEqual([
       "interval",
       "missing_note",
+      "side_quest",
       "side_quest",
       "side_quest",
       "side_quest",
@@ -85,7 +87,7 @@ describe("Chapter 1 content — singer", () => {
     expect(interval.question.songOptions.length).toBeGreaterThan(0);
   });
 
-  it("side quests are the five wired into chapter 1's UI", () => {
+  it("side quests are the six wired into chapter 1's UI", () => {
     const p = plan("singer", "beginner", 0);
     const quests = p.challenges.slice(2).map((c) => (c.kind === "side_quest" ? c.quest.kind : null));
     expect(quests).toEqual([
@@ -94,6 +96,24 @@ describe("Chapter 1 content — singer", () => {
       "walking_beside_the_melody",
       "finish_the_phrase",
       "hidden_companion",
+      "choose_the_better_path",
     ]);
+  });
+
+  it("Choose the Better Path's answer is derived by the real naturalness judgment, not authored", () => {
+    // The block line (A) shadows the melody in parallel 3rds; the judgment
+    // must land on the independent companion (B) with a margin the engine is
+    // willing to call — and the explanation must name block harmony in both
+    // languages, since that's the factor that actually separated the lines.
+    const p = plan("singer", "beginner", 0);
+    const betterPath = p.challenges.find((c) => c.kind === "side_quest" && c.quest.kind === "choose_the_better_path");
+    if (!betterPath || betterPath.kind !== "side_quest" || betterPath.quest.kind !== "choose_the_better_path") {
+      throw new Error("better path challenge missing");
+    }
+    const q = betterPath.quest.question;
+    expect(judgeHarmonyLines(q.melody, q.lineA, q.lineB)).toMatchObject({ verdict: q.better });
+    expect(q.better).toBe("b");
+    expect(q.explanation.en).toContain("block harmony");
+    expect(q.explanation.pt).toContain("harmonia em bloco");
   });
 });

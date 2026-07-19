@@ -10,7 +10,7 @@
  * routed to the ONE AudioEngine before any grading feedback is shown, never
  * after.
  */
-import { display } from "../../engine/i18n/localized-text.js";
+import { display, type LocalizedText } from "../../engine/i18n/localized-text.js";
 import { getKey } from "../../engine/theory/keys.js";
 import type { DifficultyTierId, SpelledNote } from "../../engine/types/schema.js";
 import type { Chapter } from "../../engine/types/schema.js";
@@ -89,7 +89,13 @@ export function renderLevelRunner(
         ctx.data.rewards,
         ctx.data.harmonicUnlocks,
       );
-      renderCompletion(root, ctx, completeEffect.result, settled.newRewardIds, settled.newHarmonicUnlockIds, () =>
+      // A quest finishing as the level's last challenge still owes the player
+      // its reveal text (e.g. Choose the Better Path's explanation) — carry it
+      // onto the completion screen instead of swallowing it with the frame.
+      const finalReveals = t.effects.flatMap((e) =>
+        e.type === "side_quest" && e.effect.type === "reveal" ? [e.effect.text] : [],
+      );
+      renderCompletion(root, ctx, completeEffect.result, settled.newRewardIds, settled.newHarmonicUnlockIds, finalReveals, () =>
         onDone(completeEffect.result),
       );
       return;
@@ -104,11 +110,13 @@ function renderCompletion(
   result: LevelResult,
   newRewardIds: string[],
   newHarmonicUnlockIds: string[],
+  finalReveals: LocalizedText[],
   onContinue: () => void,
 ): void {
   clear(root);
   const container = document.createElement("div");
   container.dataset["screen"] = "level-complete";
+  for (const reveal of finalReveals) container.appendChild(paragraph(display(reveal, ctx.language)));
   const outcomeText =
     result.outcome === "passed"
       ? ctx.language === "en"

@@ -26,6 +26,7 @@ import type { LanternQuestion } from "../tracks/singer/side-quests/hold-the-lant
 import type { WalkingQuestion } from "../tracks/singer/side-quests/walking-beside-the-melody.js";
 import type { FinishQuestion } from "../tracks/singer/side-quests/finish-the-phrase.js";
 import type { HiddenCompanionQuestion } from "../tracks/singer/side-quests/hidden-companion.js";
+import { buildBetterPathQuestion } from "../tracks/singer/harmony/naturalness.js";
 import type { MelodyNote } from "../tracks/singer/missing-note/melodies.js";
 
 // ---------------------------------------------------------------------------
@@ -205,6 +206,56 @@ export const CH01_HIDDEN_COMPANION_QUESTION: HiddenCompanionQuestion = {
   companionIndex: 1,
 };
 
+// Choose the Better Path: the sixth side quest, and the one whose answer is
+// DERIVED at build time by judgeHarmonyLines rather than authored. The melody
+// is a singable C-major arch that walks home to do; line A is the harmony
+// people sing by default — parallel 3rds below throughout, closing with one
+// contrary step to unison — pleasant to the ear, but a shadow with no life of
+// its own; line B holds while the melody rises, walks down against it, sits
+// on a G pedal, and leaps home to unison do. buildBetterPathQuestion runs the
+// real judgment (verdict "b", margin 14; line B does track the melody in
+// parallel 6ths for two steps of its descent — an idiomatic alto moment the
+// scoring correctly charges without calling the line a shadow). No
+// betterOverride exists: the engine's verdict matched the authorial ear here,
+// so the override remains deliberately unbuilt — see PROGRESS.md.
+
+const CH01_BETTER_PATH_MELODY: MelodyNote[] = [
+  { note: spelled("E"), octave: 4, beats: 1 },
+  { note: spelled("F"), octave: 4, beats: 1 },
+  { note: spelled("G"), octave: 4, beats: 1 },
+  { note: spelled("F"), octave: 4, beats: 1 },
+  { note: spelled("E"), octave: 4, beats: 1 },
+  { note: spelled("D"), octave: 4, beats: 1 },
+  { note: spelled("C"), octave: 4, beats: 2 },
+];
+
+const CH01_BETTER_PATH_LINE_A: MelodyNote[] = [
+  { note: spelled("C"), octave: 4, beats: 1 },
+  { note: spelled("D"), octave: 4, beats: 1 },
+  { note: spelled("E"), octave: 4, beats: 1 },
+  { note: spelled("D"), octave: 4, beats: 1 },
+  { note: spelled("C"), octave: 4, beats: 1 },
+  { note: spelled("B"), octave: 3, beats: 1 },
+  { note: spelled("C"), octave: 4, beats: 2 },
+];
+
+const CH01_BETTER_PATH_LINE_B: MelodyNote[] = [
+  { note: spelled("C"), octave: 4, beats: 1 },
+  { note: spelled("C"), octave: 4, beats: 1 },
+  { note: spelled("B"), octave: 3, beats: 1 },
+  { note: spelled("A"), octave: 3, beats: 1 },
+  { note: spelled("G"), octave: 3, beats: 1 },
+  { note: spelled("G"), octave: 3, beats: 1 },
+  { note: spelled("C"), octave: 4, beats: 2 },
+];
+
+export const CH01_BETTER_PATH_QUESTION = buildBetterPathQuestion(
+  "ch01-choose-the-better-path",
+  CH01_BETTER_PATH_MELODY,
+  CH01_BETTER_PATH_LINE_A,
+  CH01_BETTER_PATH_LINE_B,
+);
+
 // ---------------------------------------------------------------------------
 // Materializer — the chapter-specific bridge from content refs to Challenge
 // instances. Instrumentalist refs still resolve through the generic JSON
@@ -276,6 +327,13 @@ export function materializeChapter01(
         id: ref.id,
         contextKeyId: "C-major",
         quest: { kind: "hidden_companion", question: CH01_HIDDEN_COMPANION_QUESTION },
+      };
+    case "ch01-choose-the-better-path":
+      return {
+        kind: "side_quest",
+        id: ref.id,
+        contextKeyId: "C-major",
+        quest: { kind: "choose_the_better_path", question: CH01_BETTER_PATH_QUESTION },
       };
     default:
       return null;

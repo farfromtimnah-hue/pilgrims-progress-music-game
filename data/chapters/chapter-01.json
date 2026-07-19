@@ -6,7 +6,9 @@
   },
   "order": 1,
   "testsNotationPrecision": false,
-  "keyIds": ["C-major"],
+  "keyIds": [
+    "C-major"
+  ],
   "levels": [
     {
       "id": "ch01-l01",
@@ -23,7 +25,8 @@
         "ch01-hold-the-lantern",
         "ch01-walking-beside-the-melody",
         "ch01-finish-the-phrase",
-        "ch01-hidden-companion"
+        "ch01-hidden-companion",
+        "ch01-choose-the-better-path"
       ],
       "audioCueIds": [],
       "harmonicUnlockIds": []

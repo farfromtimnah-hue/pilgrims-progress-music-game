@@ -772,3 +772,108 @@ author chapter 2+ following this session's pattern:
 
 **State**
 - 183 tests passing (21 files; 179 prior + 4 new), typecheck clean.
+
+---
+
+## 2026-07-19 — Choose the Better Path: real Chapter 1 content, the naturalness judgment run for real, and the betterOverride decision resolved
+
+This session did the one side quest whose answer is DERIVED, not authored:
+Choose the Better Path's `better`/`explanation` fields come from actually
+running `judgeHarmonyLines()` on the authored lines, never hand-written.
+
+**The authored content (`src/content/chapter-01.ts`)**
+- Melody (C major, the chapter's world): E4 F4 G4 F4 E4 D4 C4 — a singable
+  arch that walks home to do.
+- **Line A** — parallel 3rds below the melody the whole way (C4 D4 E4 D4 C4
+  B3), closing with one contrary step to unison C4. Deliberately NOT a
+  rigged-bad line: parallel 3rds are the harmony people sing by default and
+  they sound pleasant — which is exactly the pedagogical point. It is fully
+  consonant, fully singable; its only flaw is having no life of its own.
+- **Line B** — an independent companion: holds C while the melody rises,
+  walks down B3–A3–G3 against and then briefly with the melody, sits on a G
+  pedal, and leaps up to unison C4 at the cadence.
+
+**The judgment, run for real (actual engine output)**
+`judgeHarmonyLines(melody, lineA, lineB)`:
+- Line A: score **−12** — 5 of 6 steps parallel (`isShadow: true`, so the
+  −4 shadow penalty applied), 1 contrary, 0 dissonances, 0 leaps.
+- Line B: score **+2** — 2 contrary, 2 oblique, 2 similar of which both are
+  parallel 6ths (B's B–A–G descent tracks the melody's G–F–E for two steps —
+  an idiomatic hymn-alto moment the scoring charges −4 without calling the
+  line a shadow), dominant motion "contrary", 0 dissonances, 0 leaps.
+- **Verdict: "b", margin 14** — far clear of `MARGIN_TOO_CLOSE` (2). The
+  generated explanation names the two factors that actually separated the
+  lines (block harmony; taking its own steps), in both languages.
+- Honesty note: my own pre-run hand-scoring of line B was wrong (I had
+  mis-assigned one melody direction and predicted contrary 3 / margin 18);
+  the engine's count is correct on re-derivation. The verdict itself was
+  unchanged — but it's a good demonstration of why the answer is derived by
+  the engine rather than authored by hand.
+
+**betterOverride: deliberately NOT built**
+The standing rule was: build the `betterOverride` content field only when a
+real authored pair either throws `too_close_to_call` or gets a verdict the
+authoring ear disagrees with. Neither happened — the engine picked line B
+cleanly, and by ear I agree: A is pleasant but is pure block harmony; B has
+its own contour and ends home. So there is still no genuine disagreement on
+record to design the override against, and building it now would be
+speculative schema. The trigger condition transfers unchanged to the next
+Better Path authoring session (chapter 2+). None of the five settled
+judgment calls (weights, plain-similar-neutral, P4-consonant,
+MARGIN_TOO_CLOSE=2, >50% shadow threshold) needed touching — nothing in
+this content surfaced a case against them.
+
+**Wiring**
+- `src/content/chapter-01.ts`: `CH01_BETTER_PATH_QUESTION` built via the
+  real `buildBetterPathQuestion()` at module load (so too-close content
+  would fail every test run loudly, per that function's contract), plus the
+  `materializeChapter01` case; `data/chapters/chapter-01.json` gains
+  `ch01-choose-the-better-path` — the singer level now carries all six side
+  quests.
+- `src/app/screens/singer-side-quest.ts`: the sixth and final UI block,
+  exact Echo/Lantern pattern — prompt/retry/reveal text rendered from real
+  effects, two pick buttons ("Choose companion A/B", EN/PT) dispatching real
+  `choose_path` events into the real reducer. Both duets are `play_duet`
+  effects routed through the one AudioEngine before any result renders
+  (ear first, as always).
+- `src/app/screens/level-runner.ts` fix found while wiring: when a quest
+  finishes as the level's LAST challenge, the completion screen used to
+  replace the frame and swallow the quest's final `reveal` text — Better
+  Path (now last in the level) made this visible. The completion screen now
+  renders any final reveal texts, so the explanation is always shown.
+  (This also benefits Hidden Companion or any future last-in-level quest.)
+
+**How this was verified**
+- 2 new UI tests in `singer-side-quest.newquests.test.ts` (real
+  orchestrator + real DOM clicks): correct pick completes with the real
+  explanation in the reveal effect; wrong pick retries with both duets
+  replayed, second wrong pick reveals and completes unsuccessfully. 1 new
+  content test in `chapter-01.test.ts`: the shipped question's `better`
+  matches a fresh `judgeHarmonyLines` run and the explanation names block
+  harmony in both languages. Suite: **186 tests passing (21 files)**,
+  typecheck clean, production Vite build succeeds.
+- Real headless-browser (Playwright/Chromium) drive of the ENTIRE singer
+  Chapter 1 level against the dev server — language gate → Singer →
+  Beginner → interval → missing note → Echo (the previously-flagged
+  double-click quirk didn't reproduce with ~350ms between clicks; picks
+  registered exactly as "C E D C" on the first attempt) → Lantern →
+  Walking → Finish → Hidden Companion → **Better Path: both duets
+  confirmed played via real `AudioEngine.playPhrases` calls (spied in the
+  live page), wrong pick showed the retry hint and replayed both duets
+  (+2 calls), right pick completed the level with the real judgment
+  explanation on the completion screen. Zero console errors.**
+
+**Open questions for Nicole**
+- Listen to the pair yourself: melody E-F-G-F-E-D-C, line A in parallel
+  3rds below, line B C-C-B-A-G-G-C. Do you agree B is the more natural
+  companion? If you ever disagree with a shipped verdict, that's the real
+  trigger for `betterOverride` — it stays unbuilt until then.
+- New PT strings for native-speaker review: "Você ouviu a melodia com o
+  companheiro A, depois com o companheiro B." / "Escolher companheiro A/B"
+  (`singer-side-quest.ts`) — is "companheiro" the right word for kids here,
+  matching the quest prompt's own usage?
+
+**State**
+- 186 tests passing (21 files), typecheck clean, production build clean,
+  full singer level incl. Choose the Better Path driven end-to-end in a
+  real headless browser with zero console errors.
