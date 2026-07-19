@@ -192,6 +192,18 @@ describe("Choose the Better Path", () => {
     expect(fx(t.effects, "complete")[0]).toMatchObject({ success: false, mistakes: 2 });
     expect(fx(t.effects, "reveal")).toHaveLength(1);
   });
+
+  it("replay_duet emits just the requested companion's duet without changing phase or counting as a pick", () => {
+    const started = startBetterPathQuest(question);
+    const t = betterPathReducer(started.state, { type: "replay_duet", which: "a" }, question);
+    expect(t.state).toEqual(started.state);
+    expect(fx(t.effects, "play_duet")).toHaveLength(1);
+    expect(t.effects).toHaveLength(1);
+
+    const tb = betterPathReducer(started.state, { type: "replay_duet", which: "b" }, question);
+    expect(fx(tb.effects, "play_duet")).toHaveLength(1);
+    expect(tb.state).toEqual(started.state);
+  });
 });
 
 // ---------------------------------------------------------------------------

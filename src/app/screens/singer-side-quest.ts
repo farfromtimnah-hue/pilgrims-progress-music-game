@@ -167,12 +167,20 @@ export function renderSideQuestChallenge(
       ),
     );
     for (const pick of ["a", "b"] as const) {
-      container.appendChild(
+      const row = document.createElement("div");
+      row.appendChild(
+        button(
+          ctx.language === "en" ? `Replay companion ${pick.toUpperCase()}` : `Repetir companheiro ${pick.toUpperCase()}`,
+          () => dispatch({ type: "side_quest_event", event: { type: "replay_duet", which: pick } }),
+        ),
+      );
+      row.appendChild(
         button(
           ctx.language === "en" ? `Choose companion ${pick.toUpperCase()}` : `Escolher companheiro ${pick.toUpperCase()}`,
           () => dispatch({ type: "side_quest_event", event: { type: "choose_path", pick } }),
         ),
       );
+      container.appendChild(row);
     }
     return container;
   }

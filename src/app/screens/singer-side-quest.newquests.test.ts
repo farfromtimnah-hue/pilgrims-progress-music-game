@@ -241,4 +241,33 @@ describe("side-quest UI wiring: walking / finish / hidden-companion", () => {
       CH01_BETTER_PATH_QUESTION.explanation.en,
     );
   });
+
+  it("Choose the Better Path replays a single companion's duet on demand without completing or counting as a pick", () => {
+    const ctx = fakeCtx();
+    const plan = planFor({
+      kind: "side_quest",
+      id: "ch01-choose-the-better-path",
+      contextKeyId: "C-major",
+      quest: { kind: "choose_the_better_path", question: CH01_BETTER_PATH_QUESTION },
+    });
+    const started = startLevel(plan);
+    let state = started.state;
+    let effects = started.effects;
+    const dispatch = (event: LevelEvent) => {
+      const t = levelFlowReducer(state, event, plan);
+      state = t.state;
+      effects = t.effects;
+    };
+    const runtime = () => (state.runtime as Extract<typeof state.runtime, { kind: "side_quest" }>);
+    const el = renderSideQuestChallenge(ctx, plan.challenges[0]!.kind === "side_quest" ? plan.challenges[0]!.quest : undefined, runtime(), effects, dispatch);
+
+    const replayBtn = Array.from(el.querySelectorAll("button")).find((b) => b.textContent === "Replay companion A");
+    expect(replayBtn).toBeDefined();
+    replayBtn!.click();
+
+    expect(state.phase).toBe("running");
+    const duetEffects = effects.filter((e) => e.type === "side_quest" && e.effect.type === "play_duet");
+    expect(duetEffects).toHaveLength(1);
+    expect(effects.some((e) => e.type === "side_quest" && e.effect.type === "complete")).toBe(false);
+  });
 });

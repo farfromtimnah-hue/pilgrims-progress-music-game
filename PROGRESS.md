@@ -877,3 +877,28 @@ this content surfaced a case against them.
 - 186 tests passing (21 files), typecheck clean, production build clean,
   full singer level incl. Choose the Better Path driven end-to-end in a
   real headless browser with zero console errors.
+
+---
+
+## 2026-07-19 — Choose the Better Path: replay buttons for both duets
+
+**What was built**
+- Bug fix: both candidate duets auto-played once at quest start with no
+  way to hear either again before committing. Added a `replay_duet`
+  event (`{ type: "replay_duet"; which: "a" | "b" }`) to
+  `choose-the-better-path.ts`'s `BetterPathEvent` union, handled by
+  `betterPathReducer` — emits just that one companion's `play_duet`
+  effect, leaves `state` untouched (no phase change, doesn't count as a
+  wrong pick).
+- Two new "Replay companion A" / "Replay companion B" buttons in
+  `singer-side-quest.ts`'s `choose_the_better_path` branch, next to the
+  existing "Choose companion A/B" buttons, bilingual EN/PT.
+
+**How this was verified**
+- New reducer test in `side-quests.test.ts`: `replay_duet` for each
+  companion emits exactly one `play_duet` effect and leaves state
+  unchanged from the post-start state.
+- New UI test in `singer-side-quest.newquests.test.ts`: clicking "Replay
+  companion A" through the real orchestrator emits exactly one
+  `play_duet` effect, doesn't complete the quest, phase stays "running".
+- Full suite: **188 tests passing (21 files)**, typecheck clean.

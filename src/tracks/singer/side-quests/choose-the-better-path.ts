@@ -28,16 +28,18 @@ export interface BetterPathState {
   wrongPicks: number;
 }
 
-export type BetterPathEvent = { type: "choose_path"; pick: "a" | "b" };
+export type BetterPathEvent = { type: "choose_path"; pick: "a" | "b" } | { type: "replay_duet"; which: "a" | "b" };
 
 export type BetterPathTransition = SideQuestTransition<BetterPathState>;
 
-function duets(question: BetterPathQuestion): SideQuestEffect[] {
+function duet(question: BetterPathQuestion, which: "a" | "b"): SideQuestEffect {
   const melody = melodyToPhrase(question.melody, `${question.id}-melody`);
-  return [
-    { type: "play_duet", voices: [melody, melodyToPhrase(question.lineA, `${question.id}-a`)] },
-    { type: "play_duet", voices: [melody, melodyToPhrase(question.lineB, `${question.id}-b`)] },
-  ];
+  const line = which === "a" ? question.lineA : question.lineB;
+  return { type: "play_duet", voices: [melody, melodyToPhrase(line, `${question.id}-${which}`)] };
+}
+
+function duets(question: BetterPathQuestion): SideQuestEffect[] {
+  return [duet(question, "a"), duet(question, "b")];
 }
 
 export function startBetterPathQuest(question: BetterPathQuestion): BetterPathTransition {
@@ -61,7 +63,11 @@ export function betterPathReducer(
   event: BetterPathEvent,
   question: BetterPathQuestion,
 ): BetterPathTransition {
-  if (state.phase !== "choosing" || event.type !== "choose_path") return { state, effects: [] };
+  if (state.phase !== "choosing") return { state, effects: [] };
+
+  if (event.type === "replay_duet") {
+    return { state, effects: [duet(question, event.which)] };
+  }
 
   if (event.pick === question.better) {
     return {
